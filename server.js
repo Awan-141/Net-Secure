@@ -12,8 +12,8 @@ app.get('/', (req, res) =>{
     res.send('200 OK')
 })
 app.get('/ip', (req, res)=>{
-    const IP = req.ip;
-    res.json({ ip: IP})
+    const userIP = req.ip.includes('::ffff:') ? req.ip.split(':').pop() : req.ip;
+    res.json({ ip: userIP})
 })
 
 app.get('/ping', (req, res) => {
@@ -28,7 +28,7 @@ app.get('/download', (req, res) => {
 
 
 app.get('/nmap', (req, res) => {
-    const userIP = req.ip;  
+    const userIP = req.ip.includes('::ffff:') ? req.ip.split(':').pop() : req.ip;
     console.log(`nmap -A --script vuln ${userIP}`)
     exec(`nmap -A --script vuln ${userIP}`, (error, stdout, stderr) => {
         if (error) {
@@ -39,7 +39,7 @@ app.get('/nmap', (req, res) => {
 });
 
 app.get('/open-ports', (req, res) => {
-    const userIP = req.ip;
+    const userIP = req.ip.includes('::ffff:') ? req.ip.split(':').pop() : req.ip;
     exec(`nmap -p- ${userIP}`, (error, stdout, stderr) => {
         if (error) {
             return res.status(500).json({ error: 'Port scan failed', details: stderr });
@@ -49,7 +49,7 @@ app.get('/open-ports', (req, res) => {
 });
 
 app.get('/services', (req, res) => {
-    const userIP = req.ip;
+    const userIP = req.ip.includes('::ffff:') ? req.ip.split(':').pop() : req.ip;
     exec(`nmap -sV -O ${userIP}`, (error, stdout, stderr) => {
         if (error) {
             return res.status(500).json({ error: 'Service detection failed', details: stderr });
@@ -59,7 +59,7 @@ app.get('/services', (req, res) => {
 });
 
 app.get('/ssl-check', (req, res) => {
-    const userIP = req.ip;
+    const userIP = req.ip.includes('::ffff:') ? req.ip.split(':').pop() : req.ip;
     exec(`nmap --script ssl-enum-ciphers ${userIP}`, (error, stdout, stderr) => {
         if (error) {
             return res.status(500).json({ error: 'SSL check failed', details: stderr });
@@ -69,7 +69,7 @@ app.get('/ssl-check', (req, res) => {
 });
 
 app.get('/vuln-scan', (req, res) => {
-    const userIP = req.ip;
+    const userIP = req.ip.includes('::ffff:') ? req.ip.split(':').pop() : req.ip;
     exec(`nmap --script vuln ${userIP}`, (error, stdout, stderr) => {
         if (error) {
             return res.status(500).json({ error: 'Vulnerability scan failed', details: stderr });
@@ -79,7 +79,7 @@ app.get('/vuln-scan', (req, res) => {
 });
 
 app.get('/firewall-check', (req, res) => {
-    const userIP = req.ip;
+    const userIP = req.ip.includes('::ffff:') ? req.ip.split(':').pop() : req.ip;
     exec(`nmap -sA ${userIP}`, (error, stdout, stderr) => {
         if (error) {
             return res.status(500).json({ error: 'Firewall detection failed', details: stderr });
