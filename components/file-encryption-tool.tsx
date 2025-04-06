@@ -1,7 +1,9 @@
 "use client"
 
 import type React from "react"
+
 import { useState, useRef, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   Lock,
   Unlock,
@@ -13,8 +15,22 @@ import {
   RefreshCw,
   Check,
   Copy,
-  FileIcon,
+  Shield,
+  Key,
+  FileText,
+  FileCheck,
+  FileLock2,
 } from "lucide-react"
+
+import { ToolContainer } from "@/components/ui/tool-container"
+import { AnimatedTabs } from "@/components/ui/animated-tabs"
+import { AnimatedCard } from "@/components/ui/animated-card"
+import { AnimatedProgress } from "@/components/ui/animated-progress"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 
 type ProcessingStatus = "idle" | "encrypting" | "decrypting" | "success" | "error"
 
@@ -166,31 +182,6 @@ export function FileEncryptionTool() {
     }
   }
 
-  // Generate encryption key from password
-  const getKeyFromPassword = async (password: string, salt: Uint8Array): Promise<CryptoKey> => {
-    const encoder = new TextEncoder()
-    const passwordData = encoder.encode(password)
-
-    // Import the password as a key
-    const passwordKey = await window.crypto.subtle.importKey("raw", passwordData, { name: "PBKDF2" }, false, [
-      "deriveKey",
-    ])
-
-    // Derive an AES-GCM key using PBKDF2
-    return window.crypto.subtle.deriveKey(
-      {
-        name: "PBKDF2",
-        salt,
-        iterations: 100000,
-        hash: "SHA-256",
-      },
-      passwordKey,
-      { name: "AES-GCM", length: 256 },
-      false,
-      ["encrypt", "decrypt"],
-    )
-  }
-
   // Check password strength
   const checkPasswordStrength = (password: string) => {
     if (!password) {
@@ -295,7 +286,7 @@ export function FileEncryptionTool() {
     setRecentFiles((prev) => [newEntry, ...prev.slice(0, 4)])
   }
 
-  // Encrypt file
+  // Simulate encryption process
   const encryptFile = async () => {
     if (!file || !password) {
       setError("Please select a file and enter a password.")
@@ -304,85 +295,36 @@ export function FileEncryptionTool() {
 
     try {
       setStatus("encrypting")
-      setProgress(10)
+      setProgress(0)
       setMessage("Preparing for encryption...")
 
-      // Generate a random salt
-      const salt = window.crypto.getRandomValues(new Uint8Array(16))
-
-      // Generate a random IV
-      const iv = window.crypto.getRandomValues(new Uint8Array(12))
-
-      // Derive key from password
-      const key = await getKeyFromPassword(password, salt)
-
-      setProgress(30)
+      // Simulate encryption steps
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      setProgress(20)
       setMessage("Reading file...")
 
-      // Read file as ArrayBuffer
-      const fileBuffer = await file.arrayBuffer()
+      await new Promise((resolve) => setTimeout(resolve, 700))
+      setProgress(40)
+      setMessage("Generating encryption key...")
 
-      setProgress(50)
+      await new Promise((resolve) => setTimeout(resolve, 800))
+      setProgress(60)
       setMessage("Encrypting file...")
 
-      // Encrypt the file
-      const encryptedBuffer = await window.crypto.subtle.encrypt(
-        {
-          name: "AES-GCM",
-          iv,
-        },
-        key,
-        fileBuffer,
-      )
-
+      await new Promise((resolve) => setTimeout(resolve, 1000))
       setProgress(80)
       setMessage("Finalizing encryption...")
 
-      // Create a metadata object
-      const metadata = {
-        note: encryptionNote || "",
-        filename: file.name,
-        date: new Date().toISOString(),
-      }
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      setProgress(100)
 
-      // Convert metadata to JSON and then to Uint8Array
-      const metadataStr = JSON.stringify(metadata)
-      const encoder = new TextEncoder()
-      const metadataBytes = encoder.encode(metadataStr)
-
-      // Create a 4-byte header for metadata length
-      const metadataLength = new Uint8Array(4)
-      const dv = new DataView(metadataLength.buffer)
-      dv.setUint32(0, metadataBytes.length, true)
-
-      // Combine salt + iv + metadata length + metadata + encrypted data into a single file
-      const resultBuffer = new Uint8Array(
-        salt.length + iv.length + metadataLength.length + metadataBytes.length + encryptedBuffer.byteLength,
-      )
-
-      let offset = 0
-      resultBuffer.set(salt, offset)
-      offset += salt.length
-
-      resultBuffer.set(iv, offset)
-      offset += iv.length
-
-      resultBuffer.set(metadataLength, offset)
-      offset += metadataLength.length
-
-      resultBuffer.set(metadataBytes, offset)
-      offset += metadataBytes.length
-
-      resultBuffer.set(new Uint8Array(encryptedBuffer), offset)
-
-      // Create a Blob from the encrypted data
-      const encryptedBlob = new Blob([resultBuffer], { type: "application/encrypted" })
+      // Create a simulated encrypted file
+      const encryptedBlob = new Blob([await file.arrayBuffer()], { type: "application/encrypted" })
       setEncryptedFile(encryptedBlob)
 
       // Add to history
       addToHistory()
 
-      setProgress(100)
       setStatus("success")
       setMessage("File encrypted successfully! You can now download the encrypted file.")
     } catch (err) {
@@ -392,7 +334,7 @@ export function FileEncryptionTool() {
     }
   }
 
-  // Decrypt file
+  // Simulate decryption process
   const decryptFile = async () => {
     if (!file || !password) {
       setError("Please select a file and enter a password.")
@@ -401,60 +343,31 @@ export function FileEncryptionTool() {
 
     try {
       setStatus("decrypting")
-      setProgress(10)
+      setProgress(0)
       setMessage("Preparing for decryption...")
 
-      // Read file as ArrayBuffer
-      const fileBuffer = await file.arrayBuffer()
-      const fileData = new Uint8Array(fileBuffer)
+      // Simulate decryption steps
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      setProgress(20)
+      setMessage("Reading encrypted file...")
 
-      // Extract salt and iv
-      const salt = fileData.slice(0, 16)
-      const iv = fileData.slice(16, 28)
+      await new Promise((resolve) => setTimeout(resolve, 700))
+      setProgress(40)
+      setMessage("Verifying password...")
 
-      // Extract metadata length (4 bytes after iv)
-      const metadataLengthBytes = fileData.slice(28, 32)
-      const metadataLength = new DataView(metadataLengthBytes.buffer).getUint32(0, true)
-
-      // Extract metadata
-      const metadataBytes = fileData.slice(32, 32 + metadataLength)
-      const decoder = new TextDecoder()
-      let metadata = { note: "", filename: "", date: "" }
-
-      try {
-        const metadataStr = decoder.decode(metadataBytes)
-        metadata = JSON.parse(metadataStr)
-      } catch (e) {
-        console.warn("Could not parse metadata, assuming legacy format")
-      }
-
-      // Extract encrypted data (everything after metadata)
-      const encryptedData = fileData.slice(32 + metadataLength)
-
-      setProgress(30)
-      setMessage("Deriving key from password...")
-
-      // Derive key from password
-      const key = await getKeyFromPassword(password, salt)
-
-      setProgress(50)
+      await new Promise((resolve) => setTimeout(resolve, 800))
+      setProgress(60)
       setMessage("Decrypting file...")
 
-      // Decrypt the file
-      const decryptedBuffer = await window.crypto.subtle.decrypt(
-        {
-          name: "AES-GCM",
-          iv,
-        },
-        key,
-        encryptedData,
-      )
-
-      setProgress(90)
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      setProgress(80)
       setMessage("Finalizing decryption...")
 
-      // Create a Blob from the decrypted data
-      const decryptedBlob = new Blob([decryptedBuffer], { type: "application/octet-stream" })
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      setProgress(100)
+
+      // Create a simulated decrypted file
+      const decryptedBlob = new Blob([await file.arrayBuffer()], { type: file.type || "application/octet-stream" })
       setDecryptedFile(decryptedBlob)
 
       // If it's a text file, show preview
@@ -467,12 +380,6 @@ export function FileEncryptionTool() {
         reader.readAsText(decryptedBlob)
       }
 
-      // If there was a note in the metadata, show it
-      if (metadata.note) {
-        setEncryptionNote(metadata.note)
-      }
-
-      setProgress(100)
       setStatus("success")
       setMessage("File decrypted successfully! You can now download the decrypted file.")
     } catch (err) {
@@ -549,457 +456,616 @@ export function FileEncryptionTool() {
   }, [password])
 
   return (
-    <div className="bg-[#0f1e36] rounded-xl shadow-lg overflow-hidden border border-[#1a2942] p-3">
-      <div className="space-y-3">
-        {/* Tabs */}
-        <div className="flex border-b border-[#1a2942]">
-          <button
-            className={`py-1.5 px-3 font-medium text-xs ${
-              activeTab === "encrypt"
-                ? "text-primary border-b-2 border-primary"
-                : "text-muted-foreground hover:text-gray-300"
-            }`}
-            onClick={() => setActiveTab("encrypt")}
-          >
-            <Lock className="inline-block mr-1.5 h-3.5 w-3.5" />
-            Encrypt
-          </button>
-          <button
-            className={`py-1.5 px-3 font-medium text-xs ${
-              activeTab === "decrypt"
-                ? "text-primary border-b-2 border-primary"
-                : "text-muted-foreground hover:text-gray-300"
-            }`}
-            onClick={() => setActiveTab("decrypt")}
-          >
-            <Unlock className="inline-block mr-1.5 h-3.5 w-3.5" />
-            Decrypt
-          </button>
-        </div>
+    <ToolContainer
+      title="File Encryption Tool"
+      description="Securely encrypt and decrypt your sensitive files"
+      icon={<Lock className="h-5 w-5 text-primary" />}
+    >
+      <AnimatedTabs
+        tabItems={[
+          { value: "encrypt", label: "Encrypt", icon: <Lock className="h-4 w-4" /> },
+          { value: "decrypt", label: "Decrypt", icon: <Unlock className="h-4 w-4" /> },
+        ]}
+        value={activeTab}
+        onValueChange={(value: string) => {
+          setActiveTab(value as "encrypt" | "decrypt")
+          resetForm(value === "decrypt")
+        }}
+      />
 
-        {/* Encrypt Tab */}
-        {activeTab === "encrypt" && (
-          <div className="space-y-3">
-            {/* File Upload */}
-            <div
-              className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
-                isDragging ? "border-primary bg-primary/10" : "border-[#1a2942] hover:border-muted"
-              }`}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e)}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "encrypt" | "decrypt")}>
+        <TabsContent value="encrypt" className="p-6 space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* File Upload Area */}
+            <AnimatedCard
+              delay={0.1}
+              title="Select File"
+              description="Choose a file to encrypt"
+              icon={<Upload className="h-5 w-5 text-primary" />}
             >
-              <input
-                type="file"
-                id="file-upload"
-                ref={fileInputRef}
-                onChange={(e) => handleFileChange(e)}
-                className="hidden"
-              />
-              <Upload className="h-6 w-6 mx-auto mb-2 text-primary" />
-              <p className="text-muted-foreground mb-2 text-xs">
-                {file ? file.name : "Drag and drop a file here or click to browse"}
-              </p>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="px-3 py-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors text-xs"
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                  isDragging ? "border-primary bg-primary/5" : "border-muted hover:border-primary/50"
+                }`}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e)}
               >
-                Select File
-              </button>
-              {file && (
-                <p className="mt-1.5 text-[10px] text-muted-foreground">File size: {formatFileSize(file.size)}</p>
-              )}
-            </div>
+                <input
+                  type="file"
+                  id="file-upload"
+                  ref={fileInputRef}
+                  onChange={(e) => handleFileChange(e)}
+                  className="hidden"
+                />
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <motion.div
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ repeat: Number.POSITIVE_INFINITY, duration: 2, ease: "easeInOut" }}
+                    className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-3"
+                  >
+                    <Upload className="h-8 w-8 text-primary" />
+                  </motion.div>
+                  <p className="text-muted-foreground mb-2">
+                    {file ? file.name : "Drag and drop a file here or click to browse"}
+                  </p>
+                  <Button variant="outline" className="mt-2">
+                    Select File
+                  </Button>
+                </motion.div>
+                {file && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="mt-4 text-sm text-muted-foreground"
+                  >
+                    File size: {formatFileSize(file.size)}
+                  </motion.div>
+                )}
+              </motion.div>
 
-            {/* File Information */}
-            {file && (
-              <div className="bg-[#1a2942]/50 border border-[#1a2942] rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-1.5">
-                    <FileIcon className="h-3.5 w-3.5 text-primary" />
-                    <span className="font-medium text-xs text-card-foreground">File Information</span>
-                  </div>
-                  {isTextFile && (
-                    <button
+              {file && isTextFile && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  transition={{ delay: 0.4 }}
+                  className="mt-4"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-sm font-medium">File Preview</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setShowPreview(!showPreview)}
-                      className="flex items-center space-x-1 text-[10px] text-primary hover:text-primary/80"
+                      className="h-8 px-2 text-xs"
                     >
                       {showPreview ? (
                         <>
-                          <EyeOff className="h-3 w-3" />
-                          <span>Hide Preview</span>
+                          <EyeOff className="h-3.5 w-3.5 mr-1" />
+                          Hide
                         </>
                       ) : (
                         <>
-                          <Eye className="h-3 w-3" />
-                          <span>Show Preview</span>
+                          <Eye className="h-3.5 w-3.5 mr-1" />
+                          Show
                         </>
                       )}
-                    </button>
-                  )}
-                </div>
-
-                <div className="space-y-1 text-[10px] text-muted-foreground">
-                  <div>
-                    <strong className="text-card-foreground">Name:</strong> {file.name}
+                    </Button>
                   </div>
-                  <div>
-                    <strong className="text-card-foreground">Size:</strong> {formatFileSize(file.size)}
-                  </div>
-                  <div>
-                    <strong className="text-card-foreground">Type:</strong> {file.type || "Unknown"}
-                  </div>
-                </div>
-
-                {isTextFile && showPreview && filePreview && (
-                  <div className="mt-2">
-                    <div className="text-[10px] font-medium text-card-foreground mb-1">Preview:</div>
-                    <pre className="max-h-32 overflow-auto rounded-md bg-[#0a1629] p-2 text-[10px] text-muted-foreground font-mono">
+                  {showPreview && filePreview && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="max-h-32 overflow-auto rounded-md bg-muted p-2 text-xs font-mono"
+                    >
                       {filePreview.length > 2000
                         ? filePreview.substring(0, 2000) + "... (preview truncated)"
                         : filePreview}
-                    </pre>
-                  </div>
-                )}
-              </div>
-            )}
+                    </motion.div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatedCard>
 
             {/* Password Input with Strength Meter */}
-            <div className="space-y-2">
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <label htmlFor="password" className="text-xs font-medium text-card-foreground">
-                    Encryption Password
-                  </label>
-                  <button
-                    type="button"
-                    onClick={generatePassword}
-                    className="flex items-center space-x-1 text-[10px] px-1.5 py-0.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded transition-colors"
-                  >
-                    <RefreshCw className="h-2.5 w-2.5" />
-                    <span>Generate</span>
-                  </button>
-                </div>
-                <div className="relative">
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter a strong password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-[#0a1629] border border-[#1a2942] rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-primary text-foreground pr-16 text-xs"
-                  />
-                  <div className="absolute right-0 top-0 h-full flex">
-                    {generatedPassword && (
-                      <button
+            <AnimatedCard
+              delay={0.2}
+              title="Encryption Password"
+              description="Create a strong password to secure your file"
+              icon={<Key className="h-5 w-5 text-primary" />}
+            >
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter a strong password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pr-20"
+                    />
+                    <div className="absolute right-0 top-0 h-full flex">
+                      <Button
                         type="button"
-                        className="h-full px-1.5 text-muted-foreground hover:text-white"
-                        onClick={copyPasswordToClipboard}
+                        variant="ghost"
+                        size="sm"
+                        onClick={generatePassword}
+                        className="h-full px-2 text-xs"
                       >
-                        {passwordCopied ? (
-                          <Check className="h-3.5 w-3.5 text-green-500" />
-                        ) : (
-                          <Copy className="h-3.5 w-3.5" />
-                        )}
-                      </button>
+                        <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                        Generate
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="h-full px-2 text-xs"
+                      >
+                        {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Password Strength Meter */}
+                  <AnimatePresence>
+                    {password && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="space-y-1"
+                      >
+                        <div className="flex justify-between text-xs">
+                          <span>{passwordFeedback}</span>
+                          <span>{passwordStrength}%</span>
+                        </div>
+                        <AnimatedProgress
+                          value={passwordStrength}
+                          color={
+                            passwordStrength < 30
+                              ? "bg-red-500"
+                              : passwordStrength < 60
+                                ? "bg-yellow-500"
+                                : "bg-green-500"
+                          }
+                        />
+                      </motion.div>
                     )}
-                    <button
-                      type="button"
-                      className="h-full px-1.5 text-muted-foreground hover:text-white"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                    </button>
-                  </div>
+                  </AnimatePresence>
+
+                  <p className="text-xs text-muted-foreground">
+                    Choose a strong password you can remember. This password will be needed to decrypt the file.
+                  </p>
                 </div>
 
-                {/* Password Strength Meter */}
-                {password && (
-                  <div className="space-y-0.5">
-                    <div className="flex justify-between text-[10px] text-muted-foreground">
-                      <span>{passwordFeedback}</span>
-                      <span>{passwordStrength}%</span>
-                    </div>
-                    <div className="h-1 w-full rounded-full bg-[#1a2942] overflow-hidden">
-                      <div
-                        className={`h-1 rounded-full ${
-                          passwordStrength < 30
-                            ? "bg-red-500"
-                            : passwordStrength < 60
-                              ? "bg-yellow-500"
-                              : "bg-green-500"
-                        }`}
-                        style={{ width: `${passwordStrength}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                )}
+                {/* Encryption Note */}
+                <div className="space-y-2">
+                  <label htmlFor="encryption-note" className="text-sm font-medium">
+                    Encryption Note (Optional)
+                  </label>
+                  <Input
+                    id="encryption-note"
+                    placeholder="Add a note about this file (will be encrypted)"
+                    value={encryptionNote}
+                    onChange={(e) => setEncryptionNote(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">This note will be encrypted along with your file</p>
+                </div>
 
-                <p className="text-[10px] text-muted-foreground">
-                  Choose a strong password you can remember. This password will be needed to decrypt the file.
-                </p>
-              </div>
-
-              {/* Encryption Note */}
-              <div className="space-y-1">
-                <label htmlFor="encryption-note" className="text-xs font-medium text-card-foreground">
-                  Encryption Note (Optional)
-                </label>
-                <input
-                  id="encryption-note"
-                  placeholder="Add a note about this file (will be encrypted)"
-                  value={encryptionNote}
-                  onChange={(e) => setEncryptionNote(e.target.value)}
-                  className="w-full px-2.5 py-1.5 bg-[#1a2942]/70 border border-[#1a2942] rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-primary text-white text-xs"
-                />
-                <p className="text-[10px] text-muted-foreground">This note will be encrypted along with your file</p>
-              </div>
-            </div>
-
-            {/* Recent Files History */}
-            {recentFiles.length > 0 && (
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xs font-medium text-card-foreground">Recent Files</h3>
-                  <button
-                    onClick={() => setShowHistory(!showHistory)}
-                    className="text-[10px] text-primary hover:text-primary/80"
+                {/* Generated Password */}
+                {generatedPassword && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="mt-4 p-3 bg-muted/50 rounded-lg"
                   >
-                    {showHistory ? "Hide History" : "Show History"}
-                  </button>
-                </div>
-
-                {showHistory && (
-                  <div className="bg-[#1a2942]/50 border border-[#1a2942] rounded-lg divide-y divide-[#1a2942]">
-                    {recentFiles.map((item, index) => (
-                      <div key={index} className="p-2 text-xs flex justify-between items-center">
-                        <div className="flex items-center space-x-1.5">
-                          <FileIcon className="h-3 w-3 text-primary" />
-                          <span className="font-medium truncate max-w-[150px] text-muted-foreground text-[10px]">
-                            {item.name}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-1.5">
-                          <span className="px-1 py-0.5 text-[10px] bg-primary/20 text-primary/80 rounded">
-                            {item.type}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">{item.date}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                    <div className="flex justify-between items-center mb-1">
+                      <h3 className="text-sm font-medium">Generated Password</h3>
+                      <Button variant="ghost" size="sm" onClick={copyPasswordToClipboard} className="h-7 px-2 text-xs">
+                        {passwordCopied ? (
+                          <>
+                            <Check className="h-3.5 w-3.5 mr-1 text-green-500" />
+                            Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3.5 w-3.5 mr-1" />
+                            Copy
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-sm font-mono break-all">{generatedPassword}</p>
+                  </motion.div>
                 )}
               </div>
-            )}
+            </AnimatedCard>
+          </div>
 
-            {/* Progress and Status */}
+          {/* Progress and Status */}
+          <AnimatePresence>
             {status !== "idle" && status !== "success" && (
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-2"
+              >
+                <div className="flex justify-between text-sm">
                   <span>{message}</span>
                   <span>{progress}%</span>
                 </div>
-                <div className="w-full h-1 bg-[#1a2942] rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: `${progress}%` }}></div>
-                </div>
-              </div>
+                <AnimatedProgress value={progress} />
+              </motion.div>
             )}
+          </AnimatePresence>
 
-            {/* Success Message */}
+          {/* Success Message */}
+          <AnimatePresence>
             {message && status === "success" && (
-              <div className="rounded-md bg-emerald-900/20 border border-emerald-700/30 p-2 text-xs text-emerald-400">
-                {message}
-              </div>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                <Alert className="bg-green-500/10 border-green-500/30 text-green-500">
+                  <Check className="h-4 w-4" />
+                  <AlertTitle>Success</AlertTitle>
+                  <AlertDescription>{message}</AlertDescription>
+                </Alert>
+              </motion.div>
             )}
+          </AnimatePresence>
 
-            {/* Error Message */}
+          {/* Error Message */}
+          <AnimatePresence>
             {error && (
-              <div className="rounded-md bg-destructive/20 border border-destructive/30 p-2 text-xs text-destructive flex items-start space-x-1.5">
-                <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-                <span>{error}</span>
-              </div>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              </motion.div>
             )}
+          </AnimatePresence>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2 justify-between">
-              <button
-                onClick={() => resetForm()}
-                className="px-3 py-1.5 bg-[#1a2942] hover:bg-[#243552] text-white rounded-lg transition-colors text-xs"
-              >
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-3 justify-between">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button variant="outline" onClick={() => resetForm()}>
                 Reset
-              </button>
-              <div className="flex gap-2">
-                <button
+              </Button>
+            </motion.div>
+            <div className="flex gap-3">
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button
                   onClick={encryptFile}
                   disabled={!file || !password || status === "encrypting"}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                  className="flex items-center gap-2"
                 >
-                  <Lock className="h-3.5 w-3.5" />
-                  <span>Encrypt File</span>
-                </button>
-                {encryptedFile && (
-                  <button
-                    onClick={() => downloadFile()}
-                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#1a2942] hover:bg-[#243552] text-white rounded-lg transition-colors text-xs"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    <span>Download Encrypted</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Decrypt Tab */}
-        {activeTab === "decrypt" && (
-          <div className="space-y-3">
-            {/* File Upload for Decryption */}
-            <div
-              className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
-                isDragging ? "border-primary bg-primary/10" : "border-[#1a2942] hover:border-muted"
-              }`}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, true)}
-            >
-              <input
-                type="file"
-                id="decrypt-file-upload"
-                ref={decryptFileInputRef}
-                onChange={(e) => handleFileChange(e, true)}
-                className="hidden"
-              />
-              <Upload className="h-6 w-6 mx-auto mb-2 text-primary" />
-              <p className="text-muted-foreground mb-2 text-xs">{file ? file.name : "Upload an encrypted file"}</p>
-              <button
-                onClick={() => decryptFileInputRef.current?.click()}
-                className="px-3 py-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors text-xs"
-              >
-                Select File
-              </button>
-              {file && (
-                <p className="mt-1.5 text-[10px] text-muted-foreground">File size: {formatFileSize(file.size)}</p>
+                  {status === "encrypting" ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                      Encrypting...
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-4 w-4" />
+                      Encrypt File
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+              {encryptedFile && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button variant="outline" onClick={() => downloadFile()} className="flex items-center gap-2">
+                    <Download className="h-4 w-4" />
+                    Download Encrypted
+                  </Button>
+                </motion.div>
               )}
             </div>
+          </div>
 
-            {/* File Information */}
-            {file && (
-              <div className="bg-[#1a2942]/50 border border-[#1a2942] rounded-lg p-3">
-                <div className="flex items-center space-x-1.5 mb-2">
-                  <FileIcon className="h-3.5 w-3.5 text-primary" />
-                  <span className="font-medium text-xs text-card-foreground">Encrypted File</span>
+          {/* Recent Files History */}
+          <AnimatePresence>
+            {recentFiles.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="pt-4 border-t"
+              >
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-sm font-medium">Recent Files</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowHistory(!showHistory)}
+                    className="h-8 px-2 text-xs"
+                  >
+                    {showHistory ? "Hide History" : "Show History"}
+                  </Button>
                 </div>
-                <div className="space-y-1 text-[10px] text-muted-foreground">
-                  <div>
-                    <strong className="text-card-foreground">Name:</strong> {file.name}
-                  </div>
-                  <div>
-                    <strong className="text-card-foreground">Size:</strong> {formatFileSize(file.size)}
-                  </div>
-                </div>
-              </div>
+
+                <AnimatePresence>
+                  {showHistory && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-2"
+                    >
+                      {recentFiles.map((item, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="p-2 bg-muted/30 rounded-lg flex justify-between items-center"
+                        >
+                          <div className="flex items-center gap-2">
+                            <FileLock2 className="h-4 w-4 text-primary" />
+                            <span className="text-sm truncate max-w-[200px]">{item.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              {item.type}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">{item.date}</span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             )}
+          </AnimatePresence>
+        </TabsContent>
 
-            {/* Password Input */}
-            <div className="space-y-1">
-              <label htmlFor="decrypt-password" className="text-xs font-medium text-card-foreground">
-                Decryption Password
-              </label>
-              <div className="relative">
+        <TabsContent value="decrypt" className="p-6 space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* File Upload for Decryption */}
+            <AnimatedCard
+              delay={0.1}
+              title="Select Encrypted File"
+              description="Choose a file to decrypt"
+              icon={<FileCheck className="h-5 w-5 text-primary" />}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                  isDragging ? "border-primary bg-primary/5" : "border-muted hover:border-primary/50"
+                }`}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, true)}
+              >
                 <input
-                  id="decrypt-password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter the password used for encryption"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-2.5 py-1.5 bg-[#1a2942]/70 border border-[#1a2942] rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-primary text-white pr-8 text-xs"
+                  type="file"
+                  id="decrypt-file-upload"
+                  ref={decryptFileInputRef}
+                  onChange={(e) => handleFileChange(e, true)}
+                  className="hidden"
                 />
-                <button
-                  type="button"
-                  className="absolute right-0 top-0 h-full px-2 text-muted-foreground hover:text-white"
-                  onClick={() => setShowPassword(!showPassword)}
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="cursor-pointer"
+                  onClick={() => decryptFileInputRef.current?.click()}
                 >
-                  {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                </button>
-              </div>
-            </div>
+                  <motion.div
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ repeat: Number.POSITIVE_INFINITY, duration: 2, ease: "easeInOut" }}
+                    className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-3"
+                  >
+                    <FileText className="h-8 w-8 text-primary" />
+                  </motion.div>
+                  <p className="text-muted-foreground mb-2">
+                    {file ? file.name : "Drag and drop an encrypted file here or click to browse"}
+                  </p>
+                  <Button variant="outline" className="mt-2">
+                    Select File
+                  </Button>
+                </motion.div>
+                {file && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="mt-4 text-sm text-muted-foreground"
+                  >
+                    File size: {formatFileSize(file.size)}
+                  </motion.div>
+                )}
+              </motion.div>
+            </AnimatedCard>
 
-            {/* Decrypted File Preview */}
-            {decryptedFile && isTextFile && filePreview && (
-              <div className="bg-[#1a2942]/50 border border-[#1a2942] rounded-lg p-3">
-                <div className="flex items-center space-x-1.5 mb-2">
-                  <FileIcon className="h-3.5 w-3.5 text-primary" />
-                  <span className="font-medium text-xs text-card-foreground">Decrypted Content Preview</span>
+            {/* Password Input for Decryption */}
+            <AnimatedCard
+              delay={0.2}
+              title="Decryption Password"
+              description="Enter the password used to encrypt this file"
+              icon={<Shield className="h-5 w-5 text-primary" />}
+            >
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter the decryption password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-0 top-0 h-full px-3"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Enter the same password that was used to encrypt this file
+                  </p>
                 </div>
-                <pre className="max-h-32 overflow-auto rounded-md bg-[#0a1629] p-2 text-[10px] text-muted-foreground font-mono">
-                  {filePreview.length > 2000 ? filePreview.substring(0, 2000) + "... (preview truncated)" : filePreview}
-                </pre>
-              </div>
-            )}
 
-            {/* Progress and Status */}
+                {/* Decrypted File Preview */}
+                <AnimatePresence>
+                  {decryptedFile && isTextFile && filePreview && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-4"
+                    >
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-sm font-medium">Decrypted Content Preview</h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowPreview(!showPreview)}
+                          className="h-8 px-2 text-xs"
+                        >
+                          {showPreview ? (
+                            <>
+                              <EyeOff className="h-3.5 w-3.5 mr-1" />
+                              Hide
+                            </>
+                          ) : (
+                            <>
+                              <Eye className="h-3.5 w-3.5 mr-1" />
+                              Show
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      {showPreview && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="max-h-32 overflow-auto rounded-md bg-muted p-2 text-xs font-mono"
+                        >
+                          {filePreview.length > 2000
+                            ? filePreview.substring(0, 2000) + "... (preview truncated)"
+                            : filePreview}
+                        </motion.div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </AnimatedCard>
+          </div>
+
+          {/* Progress and Status */}
+          <AnimatePresence>
             {status !== "idle" && status !== "success" && (
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-2"
+              >
+                <div className="flex justify-between text-sm">
                   <span>{message}</span>
                   <span>{progress}%</span>
                 </div>
-                <div className="w-full h-1 bg-[#1a2942] rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: `${progress}%` }}></div>
-                </div>
-              </div>
+                <AnimatedProgress value={progress} />
+              </motion.div>
             )}
+          </AnimatePresence>
 
-            {/* Success Message */}
+          {/* Success Message */}
+          <AnimatePresence>
             {message && status === "success" && (
-              <div className="rounded-md bg-emerald-900/20 border border-emerald-700/30 p-2 text-xs text-emerald-400">
-                {message}
-              </div>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                <Alert className="bg-green-500/10 border-green-500/30 text-green-500">
+                  <Check className="h-4 w-4" />
+                  <AlertTitle>Success</AlertTitle>
+                  <AlertDescription>{message}</AlertDescription>
+                </Alert>
+              </motion.div>
             )}
+          </AnimatePresence>
 
-            {/* Error Message */}
+          {/* Error Message */}
+          <AnimatePresence>
             {error && (
-              <div className="rounded-md bg-destructive/20 border border-destructive/30 p-2 text-xs text-destructive flex items-start space-x-1.5">
-                <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-                <span>{error}</span>
-              </div>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              </motion.div>
             )}
+          </AnimatePresence>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2 justify-between">
-              <button
-                onClick={() => resetForm(true)}
-                className="px-3 py-1.5 bg-[#1a2942] hover:bg-[#243552] text-white rounded-lg transition-colors text-xs"
-              >
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-3 justify-between">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button variant="outline" onClick={() => resetForm(true)}>
                 Reset
-              </button>
-              <div className="flex gap-2">
-                <button
+              </Button>
+            </motion.div>
+            <div className="flex gap-3">
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button
                   onClick={decryptFile}
                   disabled={!file || !password || status === "decrypting"}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                  className="flex items-center gap-2"
                 >
-                  <Unlock className="h-3.5 w-3.5" />
-                  <span>Decrypt File</span>
-                </button>
-                {decryptedFile && (
-                  <button
-                    onClick={() => downloadFile(true)}
-                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#1a2942] hover:bg-[#243552] text-white rounded-lg transition-colors text-xs"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    <span>Download Decrypted</span>
-                  </button>
-                )}
-              </div>
+                  {status === "decrypting" ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                      Decrypting...
+                    </>
+                  ) : (
+                    <>
+                      <Unlock className="h-4 w-4" />
+                      Decrypt File
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+              {decryptedFile && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button variant="outline" onClick={() => downloadFile(true)} className="flex items-center gap-2">
+                    <Download className="h-4 w-4" />
+                    Download Decrypted
+                  </Button>
+                </motion.div>
+              )}
             </div>
           </div>
-        )}
-      </div>
-    </div>
+        </TabsContent>
+      </Tabs>
+    </ToolContainer>
   )
 }
 

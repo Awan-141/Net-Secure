@@ -1,12 +1,11 @@
 {
-  "name": "NetSecure",
+  "name": "netsecure",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "dev": "next dev"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -42,16 +41,21 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
+    "crypto-js": "^4.2.0",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
+    "file-saver": "^2.0.5",
+    "framer-motion": "^12.6.3",
     "input-otp": "1.4.1",
-    "lucide-react": "^0.454.0",
+    "jszip": "^3.10.1",
+    "lucide-react": "^0.487.0",
     "next": "15.1.0",
     "next-themes": "^0.4.4",
     "react": "^19",
     "react-day-picker": "8.10.1",
     "react-dom": "^19",
     "react-hook-form": "^7.54.1",
+    "react-icons": "^5.5.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.0",
     "sonner": "^1.7.1",
@@ -61,6 +65,9 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
+    "@types/file-saver": "^2.0.7",
+    "@types/jszip": "^3.4.1",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
