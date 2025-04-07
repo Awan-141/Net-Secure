@@ -387,7 +387,7 @@ export function FileTransferEstimator() {
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-6">
-          <AnimatedCard delay={1}>
+          <AnimatedCard delay={1} title={""}>
             <CardHeader>
               <CardTitle>Select Files</CardTitle>
               <CardDescription>Choose files to estimate transfer time</CardDescription>
@@ -467,13 +467,19 @@ export function FileTransferEstimator() {
             </CardContent>
           </AnimatedCard>
 
-          <AnimatedCard delay={2}>
+          <AnimatedCard delay={2} children={undefined} title={""}>
             <CardHeader>
               <CardTitle>Connection Settings</CardTitle>
               <CardDescription>Configure your network parameters</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <AnimatedTabs tabs={tabsContent} defaultTab="basic" onChange={setActiveTab} variant="pills" />
+              <AnimatedTabs defaultTab="basic" onChange={setActiveTab} variant="pills">
+                {tabsContent.map((tab) => (
+                  <div key={tab.id} id={tab.id} label={tab.label}>
+                    {tab.content}
+                  </div>
+                ))}
+              </AnimatedTabs>
             </CardContent>
             <CardFooter>
               <Button 

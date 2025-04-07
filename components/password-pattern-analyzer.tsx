@@ -780,7 +780,7 @@ export function PasswordPatternAnalyzer() {
         </div>
       </motion.div>
 
-      <AnimatedCard delay={1}>
+      <AnimatedCard delay={1} title="Password Analysis">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <Lock className="h-4 w-4" />
@@ -905,7 +905,7 @@ export function PasswordPatternAnalyzer() {
 
               <TabsContent value="analysis" className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <AnimatedCard delay={1} hoverEffect="lift">
+                  <AnimatedCard delay={1} hoverEffect="lift" title="Password Analysis">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base flex items-center gap-2">
                         <Shield className="h-4 w-4" />
@@ -1036,7 +1036,7 @@ export function PasswordPatternAnalyzer() {
                     </CardContent>
                   </AnimatedCard>
 
-                  <AnimatedCard delay={2} hoverEffect="lift">
+                  <AnimatedCard delay={2} hoverEffect="lift" title="Password Composition">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base flex items-center gap-2">
                         <Info className="h-4 w-4" />
@@ -1179,7 +1179,7 @@ export function PasswordPatternAnalyzer() {
                   </AnimatedCard>
                 </div>
 
-                <AnimatedCard delay={3} hoverEffect="glow">
+                <AnimatedCard delay={3} hoverEffect="glow" title="Improvement Suggestions">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Shield className="h-4 w-4" />
@@ -1264,7 +1264,7 @@ export function PasswordPatternAnalyzer() {
               </TabsContent>
 
               <TabsContent value="requirements" className="space-y-4">
-                <AnimatedCard delay={1} hoverEffect="lift">
+                <AnimatedCard delay={1} hoverEffect="lift" title="Default Title">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Shield className="h-4 w-4" />
@@ -1358,7 +1358,7 @@ export function PasswordPatternAnalyzer() {
                   </CardContent>
                 </AnimatedCard>
 
-                <AnimatedCard delay={2} hoverEffect="lift">
+                <AnimatedCard delay={2} hoverEffect="lift" title="Default Title">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Info className="h-4 w-4" />
@@ -1460,7 +1460,7 @@ export function PasswordPatternAnalyzer() {
               </TabsContent>
 
               <TabsContent value="security" className="space-y-4">
-                <AnimatedCard delay={1} hoverEffect="lift">
+                <AnimatedCard delay={1} hoverEffect="lift" title="Default Title">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
                       <AlertCircle className="h-4 w-4" />
@@ -1528,7 +1528,7 @@ export function PasswordPatternAnalyzer() {
                   </CardContent>
                 </AnimatedCard>
 
-                <AnimatedCard delay={2} hoverEffect="lift">
+                <AnimatedCard delay={2} hoverEffect="lift" title="Additional Security Recommendations">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Lock className="h-4 w-4" />

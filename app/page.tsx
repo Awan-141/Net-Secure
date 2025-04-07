@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 
 // Component imports
-import { AppSidebar } from "@/components/app-sidebar"
+import AppSidebar from "@/components/app-sidebar"
 import { MobileNav } from "@/components/mobile-nav"
 import { FileEncryptionTool } from "@/components/file-encryption-tool"
 import { FileTransferEstimator } from "@/components/file-transfer-estimator"
@@ -17,6 +17,7 @@ import { PasswordGenerator } from "@/components/password-generator"
 import { PasswordPatternAnalyzer } from "@/components/password-pattern-analyzer"
 import { NetworkAnalyzer } from "@/components/network-analyzer"
 import { NetworkTestTool } from "@/components/network-test-app"
+import { CodeObfuscationTool } from "@/components/code-obfuscation-tool"
 
 // Icons
 import {
@@ -29,7 +30,6 @@ import {
   KeyRound,
   ArrowRight,
   HelpCircle,
-  BarChart,
   Menu,
   Wifi,
   Code,
@@ -56,7 +56,7 @@ type HistoryEntry = {
   upload: number
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/"
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://52.4.69.90:3001/"
 
 const SecureApp = () => {
   const router = useRouter()
@@ -107,7 +107,32 @@ const SecureApp = () => {
       </motion.div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
+        {/* Code Obfuscation Tool Card */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <Card className="tool-card overflow-hidden border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-md hover:shadow-primary/5 group">
+            <CardHeader className="p-5 bg-gradient-to-br from-primary/5 to-primary/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Code className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Code Obfuscator</CardTitle>
+                  <CardDescription>Protect your code from reverse engineering</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardFooter className="p-5 pt-0">
+              <Button
+                variant="outline"
+                className="w-full justify-between text-sm bg-secondary/70 hover:bg-secondary group-hover:border-primary/30"
+                onClick={() => setActiveTab("code-obfuscator")}
+              >
+                Open Tool
+                <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </CardFooter>
+          </Card>
+        </motion.div>
 
         {/* Network Test Tool Card */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
@@ -136,10 +161,6 @@ const SecureApp = () => {
           </Card>
         </motion.div>
 
-       
-            
-         
-
         {/* Site Security Inspector Card */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
           <Card className="tool-card overflow-hidden border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-md hover:shadow-primary/5 group">
@@ -166,9 +187,6 @@ const SecureApp = () => {
             </CardFooter>
           </Card>
         </motion.div>
-
-       
-        
 
         {/* Password Analyzer Card */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
@@ -418,6 +436,10 @@ const SecureApp = () => {
                         <div className="w-2 h-2 rounded-full bg-green-500"></div>
                         <span className="text-sm text-muted-foreground">Network Security</span>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        <span className="text-sm text-muted-foreground">Code Protection</span>
+                      </div>
                     </motion.div>
                   </div>
 
@@ -455,6 +477,9 @@ const SecureApp = () => {
                             <div className="absolute top-12 left-12 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                               <KeyRound className="h-4 w-4 text-primary" />
                             </div>
+                            <div className="absolute top-[50%] right-4 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center transform -translate-y-1/2">
+                              <Code className="h-4 w-4 text-primary" />
+                            </div>
                           </motion.div>
                         </div>
                       </div>
@@ -472,6 +497,8 @@ const SecureApp = () => {
           </>
         )
 
+      case "code-obfuscator":
+        return <CodeObfuscationTool />
       case "network-analyzer":
         return <NetworkAnalyzer />
       case "network-test":
@@ -534,6 +561,7 @@ const SecureApp = () => {
           </Sheet>
           <div className="font-semibold text-lg">
             {activeTab === "dashboard" && "Dashboard"}
+            {activeTab === "code-obfuscator" && "Code Obfuscator"}
             {activeTab === "encryption" && "File Encryption"}
             {activeTab === "estimator" && "Transfer Estimator"}
             {activeTab === "compressor" && "File Compressor"}
@@ -574,4 +602,3 @@ const SecureApp = () => {
 export default function Page() {
   return <SecureApp />
 }
-

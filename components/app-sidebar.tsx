@@ -28,7 +28,7 @@ interface AppSidebarProps {
   onLogout: () => void
 }
 
-export function AppSidebar({ activeTab, setActiveTab, username, onLogout }: AppSidebarProps) {
+export function MainAppSidebar({ activeTab, setActiveTab, username, onLogout }: AppSidebarProps) {
   const pathname = usePathname()
 
   return (
@@ -203,4 +203,49 @@ export function AppSidebar({ activeTab, setActiveTab, username, onLogout }: AppS
     </div>
   )
 }
+
+"use client"
+"use client"
+
+import type React from "react"
+type SidebarProps = {
+  activeTab: string
+  setActiveTab: (tab: string) => void
+  onLogout: () => void
+  username: string
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
+  const navigationItems = [
+    {
+      name: "Code Obfuscator",
+      icon: Code,
+      href: "#",
+      onClick: () => setActiveTab("code-obfuscator"),
+      active: activeTab === "code-obfuscator",
+    },
+  ]
+
+  return (
+    <div className="w-64 bg-gray-100 h-screen p-4">
+      <h2 className="text-lg font-semibold mb-4">Navigation</h2>
+      <ul>
+        {navigationItems.map((item) => (
+          <li key={item.name} className="mb-2">
+            <a
+              href={item.href}
+              onClick={item.onClick}
+              className={`flex items-center p-2 rounded-md hover:bg-gray-200 ${item.active ? "bg-gray-200" : ""}`}
+            >
+              <item.icon className="mr-2 h-4 w-4" />
+              {item.name}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+export default Sidebar
 

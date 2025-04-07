@@ -102,7 +102,7 @@ export function PasswordGenerator() {
   }
 
   return (
-    <AnimatedCard className="bg-[#0f1e36] border-[#1a2942]" hoverEffect="glow">
+    <AnimatedCard className="bg-[#0f1e36] border-[#1a2942]" hoverEffect="glow" title={""}>
       <CardHeader>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
