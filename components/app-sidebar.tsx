@@ -204,8 +204,6 @@ export function MainAppSidebar({ activeTab, setActiveTab, username, onLogout }: 
   )
 }
 
-"use client"
-"use client"
 
 import type React from "react"
 type SidebarProps = {
