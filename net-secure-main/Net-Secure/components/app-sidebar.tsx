@@ -225,23 +225,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   ]
 
   return (
-    <div className="w-64 bg-gray-100 h-screen p-4">
-      <h2 className="text-lg font-semibold mb-4">Navigation</h2>
-      <ul>
-        {navigationItems.map((item) => (
-          <li key={item.name} className="mb-2">
-            <a
-              href={item.href}
-              onClick={item.onClick}
-              className={`flex items-center p-2 rounded-md hover:bg-gray-200 ${item.active ? "bg-gray-200" : ""}`}
-            >
-              <item.icon className="mr-2 h-4 w-4" />
-              {item.name}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <>
+    </>
   )
 }
 

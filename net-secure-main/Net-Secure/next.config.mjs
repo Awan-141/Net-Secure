@@ -21,6 +21,16 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
+  output: 'standalone',
+  swcMinify: true,
+  // Ensure proper optimization for different architectures
+  webpack: (config, { isServer }) => {
+    config.optimization = {
+      ...config.optimization,
+      moduleIds: 'deterministic',
+    }
+    return config
+  }
 }
 
 mergeConfig(nextConfig, userConfig)

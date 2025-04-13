@@ -1,0 +1,31 @@
+services:
+  frontend:
+    build:
+      context: ./Net-Secure
+      x-bake:
+        platforms:
+          - linux/amd64
+          - linux/arm64
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./cipherx-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://frontend:3000
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

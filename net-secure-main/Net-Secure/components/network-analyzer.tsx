@@ -31,7 +31,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { FileTransferEstimator } from "@/components/file-transfer-estimator"
-
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts"
 
 type Result = {
@@ -45,9 +44,30 @@ type HistoryEntry = {
   upload: number
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/"
+// Cross-origin safe API handler that works in any environment
+const useApiUrl = () => {  
+  // Always use our CORS proxy route
+  const proxyBase = '/api/proxy';
+  
+  return {
+    baseUrl: proxyBase,
+    
+    // Utility methods for making API requests
+    get: async (endpoint: string, originalApiUrl = 'http://localhost:3001') => {
+      const targetUrl = `${originalApiUrl}${endpoint}`;
+      const response = await fetch(`${proxyBase}?url=${encodeURIComponent(targetUrl)}`);
+      
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+      
+      return response.json();
+    }
+  };
+};
 
 export function NetworkAnalyzer() {
+  const api = useApiUrl();
   const [results, setResults] = useState<Result>({})
   const [loading, setLoading] = useState<boolean>(false)
   const [progress, setProgress] = useState<number>(0)
@@ -93,7 +113,19 @@ export function NetworkAnalyzer() {
 
     // Simulate IP check
     await new Promise((resolve) => setTimeout(resolve, 500))
-    setResults((prev) => ({ ...prev, ip: "192.168.1." + Math.floor(Math.random() * 254 + 1) }))
+    try {
+      // Try to get real IP first
+      const response = await fetch('/api/proxy?url=' + encodeURIComponent('https://api.ipify.org?format=json'));
+      if (response.ok) {
+        const data = await response.json();
+        setResults((prev) => ({ ...prev, ip: data.ip }))
+      } else {
+        throw new Error("Could not fetch IP");
+      }
+    } catch (e) {
+      // Fall back to mock IP
+      setResults((prev) => ({ ...prev, ip: "192.168.1." + Math.floor(Math.random() * 254 + 1) }))
+    }
     setProgress(10)
 
     // Simulate ping test
