@@ -2,86 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: 224 71% 4%;
-  --foreground: 213 31% 91%;
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
-  --card: 224 71% 4%;
-  --card-foreground: 213 31% 91%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
 
-  --popover: 224 71% 4%;
-  --popover-foreground: 213 31% 91%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-  --primary: 47 95% 57%;
-  --primary-foreground: 224 71% 4%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
 
-  --secondary: 222 47% 11%;
-  --secondary-foreground: 213 31% 91%;
+    --secondary: 48 96% 89%;
+    --secondary-foreground: 38 92% 50%;
 
-  --muted: 223 47% 11%;
-  --muted-foreground: 215 20.2% 65.1%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-  --accent: 223 47% 11%;
-  --accent-foreground: 213 31% 91%;
+    --accent: 45 93% 47%;
+    --accent-foreground: 210 40% 98%;
 
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-  --border: 216 34% 17%;
-  --input: 216 34% 17%;
-  --ring: 47 95% 57%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
 
-  --radius: 0.5rem;
+    --radius: 0.75rem;
+  }
 
-  /* Sidebar Variables */
-  --sidebar-background: 224 71% 4%;
-  --sidebar-foreground: 213 31% 91%;
-  --sidebar-primary: 47 95% 57%;
-  --sidebar-primary-foreground: 224 71% 4%;
-  --sidebar-accent: 223 47% 11%;
-  --sidebar-accent-foreground: 213 31% 91%;
-  --sidebar-border: 216 34% 17%;
-  --sidebar-ring: 47 95% 57%;
-}
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
 
-.light {
-  --background: 0 0% 100%;
-  --foreground: 224 71% 4%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
 
-  --card: 0 0% 100%;
-  --card-foreground: 224 71% 4%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
 
-  --popover: 0 0% 100%;
-  --popover-foreground: 224 71% 4%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
-  --primary: 47 95% 57%;
-  --primary-foreground: 224 71% 4%;
+    --secondary: 48 96% 89%;
+    --secondary-foreground: 38 92% 50%;
 
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 45 93% 47%;
+    --accent-foreground: 210 40% 98%;
 
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
 
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 47 95% 57%;
-
-  /* Sidebar Variables */
-  --sidebar-background: 0 0% 100%;
-  --sidebar-foreground: 224 71% 4%;
-  --sidebar-primary: 47 95% 57%;
-  --sidebar-primary-foreground: 224 71% 4%;
-  --sidebar-accent: 210 40% 96.1%;
-  --sidebar-accent-foreground: 222.2 47.4% 11.2%;
-  --sidebar-border: 214.3 31.8% 91.4%;
-  --sidebar-ring: 47 95% 57%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
 }
 
 @layer base {
@@ -390,5 +372,97 @@
 /* For emoji picker */
 .emoji-picker-container {
   --em-rgb-accent: 124, 58, 237; /* Violet-600 */
+}
+
+/* Custom animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes pulse-shadow {
+  0% { box-shadow: 0 0 0 0 rgba(var(--primary), 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(var(--primary), 0); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--primary), 0); }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Custom utility classes */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-shadow {
+  animation: pulse-shadow 2s infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+/* Typography scale */
+.h1 {
+  @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;
+}
+
+.h2 {
+  @apply scroll-m-20 text-3xl font-semibold tracking-tight first:mt-0;
+}
+
+.h3 {
+  @apply scroll-m-20 text-2xl font-semibold tracking-tight;
+}
+
+.h4 {
+  @apply scroll-m-20 text-xl font-semibold tracking-tight;
+}
+
+/* Premium UI elements */
+.premium-card {
+  @apply relative overflow-hidden rounded-xl border bg-card p-6 transition-all duration-200
+         hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20;
+}
+
+.premium-button {
+  @apply relative overflow-hidden transition-all duration-200 hover:shadow-md
+         hover:shadow-primary/20 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+}
+
+/* Micro-interactions */
+.hover-scale {
+  @apply transition-transform duration-200 hover:scale-105;
+}
+
+.hover-glow {
+  @apply transition-shadow duration-200 hover:shadow-lg hover:shadow-primary/20;
+}
+
+/* Accessibility improvements */
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
+         focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+/* Loading animations */
+.loading-shimmer {
+  @apply animate-pulse bg-primary/10 rounded-md;
+}
+
+.loading-spinner {
+  @apply animate-spin text-primary/40;
 }
 

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 
 // Component imports
-import AppSidebar from "@/components/app-sidebar"
+import { AppSidebar } from "@/components/app-sidebar"
 import { MobileNav } from "@/components/mobile-nav"
 import { FileEncryptionTool } from "@/components/file-encryption-tool"
 import { FileTransferEstimator } from "@/components/file-transfer-estimator"
@@ -36,6 +36,8 @@ import {
   ShieldAlert,
   ShieldCheck,
   Scan,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 
 // UI component imports
@@ -44,6 +46,7 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 
 type Result = {
   [key: string]: string | number
@@ -67,6 +70,7 @@ const SecureApp = () => {
   const [activeTab, setActiveTab] = useState<string>("dashboard")
   const [username, setUsername] = useState<string>("")
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const [animateHero, setAnimateHero] = useState(false)
 
   const logout = () => {
@@ -525,11 +529,26 @@ const SecureApp = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Desktop Sidebar */}
-      <AppSidebar activeTab={activeTab} setActiveTab={setActiveTab} username={username} onLogout={logout} />
+      <AppSidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        username={username} 
+        onLogout={logout}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-40 px-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle menu</span>
+          </Button>
           <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -542,20 +561,26 @@ const SecureApp = () => {
                 <SheetTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5 text-primary" />
                   <span className="font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                    NetSecure
+                    SecureShield
                   </span>
                 </SheetTitle>
               </SheetHeader>
               <div className="p-4">
-                <AppSidebar
-                  activeTab={activeTab}
-                  setActiveTab={(tab: string) => {
-                    setActiveTab(tab)
-                    setMobileSidebarOpen(false)
-                  }}
-                  username={username}
-                  onLogout={logout}
-                />
+                {/* Using the same AppSidebar component for mobile */}
+                <div className="h-[calc(100vh-8rem)] overflow-y-auto">
+                  <AppSidebar
+                    activeTab={activeTab}
+                    setActiveTab={(tab: string) => {
+                      setActiveTab(tab)
+                      setMobileSidebarOpen(false)
+                    }}
+                    username={username}
+                    onLogout={() => {
+                      logout()
+                      setMobileSidebarOpen(false)
+                    }}
+                  />
+                </div>
               </div>
             </SheetContent>
           </Sheet>
@@ -586,10 +611,28 @@ const SecureApp = () => {
         </TooltipProvider>
       </div>
 
-      {/* Main Content */}
-      <div className="lg:ml-64 min-h-screen pt-16 lg:pt-0">
+      <div className={cn(
+        "min-h-screen pt-16 lg:pt-0 transition-all duration-200 ease-in-out",
+        sidebarOpen ? "lg:ml-64" : "lg:ml-0"
+      )}>
+        {/* Toggle Sidebar Button (Desktop) */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="fixed top-4 left-4 z-30 hidden lg:flex"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+        >
+          {sidebarOpen ? (
+            <ChevronLeft className="h-5 w-5" />
+          ) : (
+            <ChevronRight className="h-5 w-5" />
+          )}
+        </Button>
+
         <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
-          <div className="bg-card rounded-xl border shadow-sm p-4 md:p-6">{renderContent()}</div>
+          <div className="bg-card rounded-xl border shadow-sm p-4 md:p-6">
+            {renderContent()}
+          </div>
         </div>
       </div>
 
