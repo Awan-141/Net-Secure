@@ -586,22 +586,39 @@ const SecureApp = () => {
       </div>
 
       <div className={cn(
-        "min-h-screen pt-16 lg:pt-0 transition-all duration-200 ease-in-out",
-        sidebarOpen ? "lg:ml-64" : "lg:ml-0"
+        "min-h-screen pt-16 lg:pt-0 transition-all duration-300 ease-in-out",
+        sidebarOpen ? "lg:ml-64" : "lg:ml-16"
       )}>
-        {/* Toggle Sidebar Button (Desktop) */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="fixed top-4 left-4 z-30 hidden lg:flex"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
+        {/* Single Unified Toggle Sidebar Button (Desktop) */}
+        <motion.div 
+          className="fixed top-4 left-4 z-30 hidden lg:block"
+          initial={false}
+          animate={sidebarOpen ? "open" : "closed"}
         >
-          {sidebarOpen ? (
-            <ChevronLeft className="h-5 w-5" />
-          ) : (
-            <ChevronRight className="h-5 w-5" />
-          )}
-        </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full hover:bg-primary/10 transition-colors relative"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            <motion.div
+              className="flex items-center justify-center"
+              variants={{
+                open: { rotate: 0 },
+                closed: { rotate: 180 }
+              }}
+              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+            >
+              <ChevronLeft className="h-5 w-5 text-foreground/80" />
+            </motion.div>
+            <motion.div
+              className="absolute inset-0 rounded-full bg-primary/5"
+              initial={{ scale: 0, opacity: 0 }}
+              whileHover={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.2 }}
+            />
+          </Button>
+        </motion.div>
 
         <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
           <div className="bg-card rounded-xl border shadow-sm p-4 md:p-6">
