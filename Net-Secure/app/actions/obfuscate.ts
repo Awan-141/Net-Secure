@@ -4,6 +4,8 @@ import * as JavaScriptObfuscator from "javascript-obfuscator"
 import { parse as parseHTML } from "node-html-parser"
 import * as typescript from "typescript"
 import { minify as minifyCSS } from "csso"
+import type { TStringArrayEncoding } from "javascript-obfuscator/typings/src/types/options/TStringArrayEncoding"
+import type { TStringArrayWrappersType } from "javascript-obfuscator/typings/src/types/options/TStringArrayWrappersType"
 
 type ObfuscationOptions = {
   compact?: boolean
@@ -11,7 +13,7 @@ type ObfuscationOptions = {
   controlFlowFlatteningThreshold?: number
   deadCodeInjection?: boolean
   deadCodeInjectionThreshold?: number
-  stringArrayEncoding?: string
+  stringArrayEncoding?: TStringArrayEncoding[]
   stringArrayThreshold?: number
   renameProperties?: boolean
   selfDefending?: boolean
@@ -35,23 +37,22 @@ export async function obfuscateCode({
 
     switch (fileType) {
       case "js":
-      case "jsx":
         return { obfuscatedCode: obfuscateJS(code, options) }
 
       case "ts":
+        return { obfuscatedCode: obfuscateTS(code, "ts", options) }
+
+      case "jsx":
+        // JSX requires special handling to preserve React-specific syntax
+        return { obfuscatedCode: obfuscateTS(code, "tsx", options) }
+
       case "tsx":
-        return { obfuscatedCode: obfuscateTS(code, fileType, options) }
-
-      case "html":
-        return { obfuscatedCode: obfuscateHTML(code, options) }
-
-      case "css":
-        return { obfuscatedCode: obfuscateCSS(code) }
+        return { obfuscatedCode: obfuscateTS(code, "tsx", options) }
 
       default:
         return {
           obfuscatedCode: "",
-          error: `Unsupported file type: ${fileType}`,
+          error: `This file type (${fileType}) is not currently supported for secure obfuscation. Please use JavaScript (js), TypeScript (ts), or React (jsx/tsx) files.`,
         }
     }
   } catch (error) {
@@ -71,7 +72,7 @@ function obfuscateJS(code: string, options: ObfuscationOptions): string {
     rotateStringArray: true,
     shuffleStringArray: true,
     stringArrayWrappersCount: 1,
-    stringArrayWrappersType: "variable",
+    stringArrayWrappersType: "variable" as TStringArrayWrappersType,
     stringArrayWrappersParametersMaxCount: 2,
     stringArrayWrappersChainedCalls: true,
     splitStrings: true,
@@ -100,24 +101,6 @@ function obfuscateTS(code: string, fileType: string, options: ObfuscationOptions
 // HTML obfuscation
 function obfuscateHTML(code: string, options: ObfuscationOptions): string {
   const root = parseHTML(code)
-
-  // Obfuscate inline JavaScript
-  const scripts = root.querySelectorAll("script:not([src])")
-  for (const script of scripts) {
-    const jsCode = script.text
-    const obfuscated = obfuscateJS(jsCode, options)
-    script.set_content(obfuscated)
-  }
-
-  // Obfuscate inline CSS
-  const styles = root.querySelectorAll("style")
-  for (const style of styles) {
-    const cssCode = style.text
-    const obfuscated = obfuscateCSS(cssCode)
-    style.set_content(obfuscated)
-  }
-
-  // Obfuscate element IDs and classes
   const classMap: Record<string, string> = {}
   const idMap: Record<string, string> = {}
   let classCounter = 0
@@ -125,23 +108,28 @@ function obfuscateHTML(code: string, options: ObfuscationOptions): string {
 
   // Replace class names
   root.querySelectorAll("[class]").forEach((element) => {
-    const classes = element.getAttribute("class").split(/\s+/)
-    const newClasses = classes.map((cls) => {
-      if (!classMap[cls]) {
-        classMap[cls] = `c${classCounter++}`
-      }
-      return classMap[cls]
-    })
-    element.setAttribute("class", newClasses.join(" "))
+    const classAttr = element.getAttribute("class")
+    if (classAttr) {
+      const classes = classAttr.split(/\s+/)
+      const newClasses = classes.map((cls) => {
+        if (!classMap[cls]) {
+          classMap[cls] = `c${classCounter++}`
+        }
+        return classMap[cls]
+      })
+      element.setAttribute("class", newClasses.join(" "))
+    }
   })
 
-  // Replace ID names
+  // Replace ID names with null checks
   root.querySelectorAll("[id]").forEach((element) => {
     const id = element.getAttribute("id")
-    if (!idMap[id]) {
-      idMap[id] = `i${idCounter++}`
+    if (id) {
+      if (!classMap[id]) {
+        idMap[id] = `i${idCounter++}`
+      }
+      element.setAttribute("id", idMap[id] || id)
     }
-    element.setAttribute("id", idMap[id])
   })
 
   return root.toString()

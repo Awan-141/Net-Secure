@@ -47,6 +47,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { useSidebar } from "@/components/ui/sidebar"
 
 type Result = {
   [key: string]: string | number
@@ -72,6 +73,7 @@ const SecureApp = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [animateHero, setAnimateHero] = useState(false)
+  const { setOpenMobile } = useSidebar()
 
   const logout = () => {
     localStorage.removeItem("username")
@@ -95,6 +97,12 @@ const SecureApp = () => {
     setTimeout(() => {
       setLoading(false)
     }, 1500)
+  }
+
+  // Update the mobile button click handler
+  const handleMobileMenuClick = () => {
+    setMobileSidebarOpen(!mobileSidebarOpen)
+    setOpenMobile(!mobileSidebarOpen)
   }
 
   // Dashboard Security Tools Section
@@ -544,46 +552,12 @@ const SecureApp = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={handleMobileMenuClick}
           >
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle menu</span>
           </Button>
-          <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="p-0 max-w-[280px] sm:max-w-[320px]">
-              <SheetHeader className="p-4 border-b">
-                <SheetTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
-                  <span className="font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                    SecureShield
-                  </span>
-                </SheetTitle>
-              </SheetHeader>
-              <div className="p-4">
-                {/* Using the same AppSidebar component for mobile */}
-                <div className="h-[calc(100vh-8rem)] overflow-y-auto">
-                  <AppSidebar
-                    activeTab={activeTab}
-                    setActiveTab={(tab: string) => {
-                      setActiveTab(tab)
-                      setMobileSidebarOpen(false)
-                    }}
-                    username={username}
-                    onLogout={() => {
-                      logout()
-                      setMobileSidebarOpen(false)
-                    }}
-                  />
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+          
           <div className="font-semibold text-lg">
             {activeTab === "dashboard" && "Dashboard"}
             {activeTab === "code-obfuscator" && "Code Obfuscator"}

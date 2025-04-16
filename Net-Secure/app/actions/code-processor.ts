@@ -97,21 +97,22 @@ export async function deobfuscateCode({
 
     switch (fileType) {
       case "js":
-      case "jsx":
+        return { processedCode: await deobfuscateJS(code, "js") }
+
       case "ts":
+        return { processedCode: await deobfuscateJS(code, "ts") }
+
+      case "jsx":
+        // Handle JSX as TypeScript with React syntax
+        return { processedCode: await deobfuscateJS(code, "tsx") }
+
       case "tsx":
-        return { processedCode: await deobfuscateJS(code, fileType) }
-
-      case "html":
-        return { processedCode: await deobfuscateHTML(code) }
-
-      case "css":
-        return { processedCode: deobfuscateCSS(code) }
+        return { processedCode: await deobfuscateJS(code, "tsx") }
 
       default:
         return {
           processedCode: "",
-          error: `Unsupported file type: ${fileType}`,
+          error: `This file type (${fileType}) is not currently supported for deobfuscation. Please use JavaScript (js), TypeScript (ts), or React (jsx/tsx) files.`,
         }
     }
   } catch (error) {
@@ -194,14 +195,17 @@ function obfuscateHTML(code: string, options: ObfuscationOptions): string {
 
   // Replace class names
   root.querySelectorAll("[class]").forEach((element) => {
-    const classes = element.getAttribute("class").split(/\s+/)
-    const newClasses = classes.map((cls) => {
-      if (!classMap[cls]) {
-        classMap[cls] = `c${classCounter++}`
-      }
-      return classMap[cls]
-    })
-    element.setAttribute("class", newClasses.join(" "))
+    const classAttr = element.getAttribute("class")
+    if (classAttr) {
+      const classes = classAttr.split(/\s+/)
+      const newClasses = classes.map((cls) => {
+        if (!classMap[cls]) {
+          classMap[cls] = `c${classCounter++}`
+        }
+        return classMap[cls]
+      })
+      element.setAttribute("class", newClasses.join(" "))
+    }
   })
 
   // Replace ID names

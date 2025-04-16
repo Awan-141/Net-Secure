@@ -44,7 +44,7 @@ import { obfuscateCode, deobfuscateCode } from "@/app/actions/code-processor"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
-type FileType = "js" | "ts" | "jsx" | "tsx" | "html" | "css"
+type FileType = "js" | "ts" | "jsx" | "tsx"
 
 type ObfuscationLevel = "low" | "medium" | "high" | "extreme" | "custom"
 
@@ -56,7 +56,7 @@ type ObfuscationOptions = {
   deadCodeInjectionThreshold: number
   debugProtection: boolean
   disableConsoleOutput: boolean
-  identifierNamesGenerator: string
+  identifierNamesGenerator: "dictionary" | "hexadecimal" | "mangled" | "mangled-shuffled"
   renameGlobals: boolean
   renameProperties: boolean
   rotateStringArray: boolean
@@ -233,14 +233,20 @@ export function CodeObfuscationTool() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Validate file extension
+    const extension = file.name.split(".").pop()?.toLowerCase()
+    const supportedTypes = ["js", "ts", "jsx", "tsx"]
+    
+    if (!extension || !supportedTypes.includes(extension)) {
+      setError(`Unsupported file type: ${extension}. Please use .js, .ts, .jsx, or .tsx files.`)
+      e.target.value = "" // Reset file input
+      return
+    }
+
     setUploadedFile(file)
     setFileName(file.name)
-
-    // Determine file type from extension
-    const extension = file.name.split(".").pop()?.toLowerCase() as FileType
-    if (["js", "ts", "jsx", "tsx", "html", "css"].includes(extension)) {
-      setFileType(extension)
-    }
+    setFileType(extension as FileType)
+    setError(null)
 
     // Read file content
     const reader = new FileReader()
@@ -248,6 +254,9 @@ export function CodeObfuscationTool() {
       const content = e.target?.result as string
       setInputCode(content)
       setCodeSize({ ...codeSize, original: new Blob([content]).size })
+    }
+    reader.onerror = () => {
+      setError("Failed to read file. Please try again.")
     }
     reader.readAsText(file)
   }
@@ -545,8 +554,6 @@ export function CodeObfuscationTool() {
                             <SelectItem value="ts">TypeScript (.ts)</SelectItem>
                             <SelectItem value="jsx">React JSX (.jsx)</SelectItem>
                             <SelectItem value="tsx">React TSX (.tsx)</SelectItem>
-                            <SelectItem value="html">HTML (.html)</SelectItem>
-                            <SelectItem value="css">CSS (.css)</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -562,7 +569,7 @@ export function CodeObfuscationTool() {
                           id="file-upload"
                           type="file"
                           className="hidden"
-                          accept=".js,.ts,.jsx,.tsx,.html,.css"
+                          accept=".js,.ts,.jsx,.tsx"
                           onChange={handleFileUpload}
                         />
                       </div>
