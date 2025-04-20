@@ -11,6 +11,37 @@ import generate from "@babel/generator"
 import * as t from "@babel/types"
 import { TStringArrayEncoding } from "javascript-obfuscator/typings/src/types/options/TStringArrayEncoding"
 import { TStringArrayWrappersType } from "javascript-obfuscator/typings/src/types/options/TStringArrayWrappersType"
+import * as esprima from 'esprima'
+
+// Add custom error types
+class ObfuscationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ObfuscationError';
+  }
+}
+
+class DeobfuscationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'DeobfuscationError';
+  }
+}
+
+// Add utility function for error handling
+function handleProcessingError(error: unknown, operation: 'obfuscation' | 'deobfuscation'): string {
+  console.error(`Error during ${operation}:`, error);
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return `Unknown error during ${operation}`;
+}
+
+// Add type for HTML element attributes
+interface HTMLAttribute {
+  name: string;
+  value: string;
+}
 
 type ObfuscationOptions = {
   compact?: boolean
@@ -33,6 +64,12 @@ type ObfuscationOptions = {
   stringArrayThreshold?: number
   transformObjectKeys?: boolean
   unicodeEscapeSequence?: boolean
+  // Add new language-specific options
+  importObfuscation?: boolean
+  minify?: boolean
+  preserveDunder?: boolean
+  preserveEvents?: boolean
+  attributeScrambling?: boolean
 }
 
 type ObfuscateParams = {
@@ -53,36 +90,40 @@ export async function obfuscateCode({
 }: ObfuscateParams): Promise<{ processedCode: string; error?: string }> {
   try {
     if (!code.trim()) {
-      return { processedCode: "", error: "No code provided" }
+      throw new ObfuscationError("No code provided");
+    }
+
+    // Add input validation
+    if (!fileType || typeof fileType !== 'string') {
+      throw new ObfuscationError("Invalid file type");
     }
 
     switch (fileType) {
       case "js":
       case "jsx":
-        return { processedCode: obfuscateJS(code, options) }
+        return { processedCode: obfuscateJS(code, options) };
 
       case "ts":
       case "tsx":
-        return { processedCode: obfuscateTS(code, fileType, options) }
+        return { processedCode: obfuscateTS(code, fileType, options) };
+
+      case "py":
+        return { processedCode: obfuscatePython(code, options) };
 
       case "html":
-        return { processedCode: obfuscateHTML(code, options) }
+        return { processedCode: obfuscateHTML(code, options) };
 
       case "css":
-        return { processedCode: obfuscateCSS(code) }
+        return { processedCode: obfuscateCSS(code) };
 
       default:
-        return {
-          processedCode: "",
-          error: `Unsupported file type: ${fileType}`,
-        }
+        throw new ObfuscationError(`Unsupported file type: ${fileType}`);
     }
   } catch (error) {
-    console.error("Obfuscation error:", error)
     return {
       processedCode: "",
-      error: `Error during obfuscation: ${(error as Error).message}`,
-    }
+      error: handleProcessingError(error, 'obfuscation'),
+    };
   }
 }
 
@@ -92,35 +133,37 @@ export async function deobfuscateCode({
 }: DeobfuscateParams): Promise<{ processedCode: string; error?: string }> {
   try {
     if (!code.trim()) {
-      return { processedCode: "", error: "No code provided" }
+      throw new DeobfuscationError("No code provided");
+    }
+
+    if (!fileType || typeof fileType !== 'string') {
+      throw new DeobfuscationError("Invalid file type");
     }
 
     switch (fileType) {
       case "js":
-        return { processedCode: await deobfuscateJS(code, "js") }
+        return { processedCode: await deobfuscateJS(code, "js") };
 
       case "ts":
-        return { processedCode: await deobfuscateJS(code, "ts") }
+        return { processedCode: await deobfuscateJS(code, "ts") };
 
       case "jsx":
-        // Handle JSX as TypeScript with React syntax
-        return { processedCode: await deobfuscateJS(code, "tsx") }
+        return { processedCode: await deobfuscateJS(code, "tsx") };
 
       case "tsx":
-        return { processedCode: await deobfuscateJS(code, "tsx") }
+        return { processedCode: await deobfuscateJS(code, "tsx") };
 
       default:
-        return {
-          processedCode: "",
-          error: `This file type (${fileType}) is not currently supported for deobfuscation. Please use JavaScript (js), TypeScript (ts), or React (jsx/tsx) files.`,
-        }
+        throw new DeobfuscationError(
+          `This file type (${fileType}) is not currently supported for deobfuscation. ` +
+          `Please use JavaScript (js), TypeScript (ts), or React (jsx/tsx) files.`
+        );
     }
   } catch (error) {
-    console.error("Deobfuscation error:", error)
     return {
       processedCode: "",
-      error: `Error during deobfuscation: ${(error as Error).message}`,
-    }
+      error: handleProcessingError(error, 'deobfuscation'),
+    };
   }
 }
 
@@ -167,59 +210,186 @@ function obfuscateTS(code: string, fileType: string, options: ObfuscationOptions
   return obfuscateJS(result.outputText, options)
 }
 
-// HTML obfuscation
-function obfuscateHTML(code: string, options: ObfuscationOptions): string {
-  const root = parseHTML(code)
+// Python obfuscation
+function obfuscatePython(code: string, options: ObfuscationOptions & { preserveDunder?: boolean }): string {
+  const identifierMap = new Map<string, string>();
+  let counter = 0;
 
-  // Obfuscate inline JavaScript
-  const scripts = root.querySelectorAll("script:not([src])")
-  for (const script of scripts) {
-    const jsCode = script.text
-    const obfuscated = obfuscateJS(jsCode, options)
-    script.set_content(obfuscated)
-  }
+  // Generate obfuscated identifier
+  const generateIdentifier = () => {
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+    const prefix = '_' + counter++;
+    const suffix = Array(5).fill(null)
+      .map(() => alphabet[Math.floor(Math.random() * alphabet.length)])
+      .join('');
+    return prefix + suffix;
+  };
 
-  // Obfuscate inline CSS
-  const styles = root.querySelectorAll("style")
-  for (const style of styles) {
-    const cssCode = style.text
-    const obfuscated = obfuscateCSS(cssCode)
-    style.set_content(obfuscated)
-  }
+  // Handle special Python identifiers
+  const shouldPreserveIdentifier = (name: string) => {
+    if (!options.preserveDunder) return false;
+    return (name.startsWith('__') && name.endsWith('__')) || // Dunder methods
+           ['self', 'cls', 'super'].includes(name); // Common special names
+  };
 
-  // Obfuscate element IDs and classes
-  const classMap: Record<string, string> = {}
-  const idMap: Record<string, string> = {}
-  let classCounter = 0
-  let idCounter = 0
-
-  // Replace class names
-  root.querySelectorAll("[class]").forEach((element) => {
-    const classAttr = element.getAttribute("class")
-    if (classAttr) {
-      const classes = classAttr.split(/\s+/)
-      const newClasses = classes.map((cls) => {
-        if (!classMap[cls]) {
-          classMap[cls] = `c${classCounter++}`
-        }
-        return classMap[cls]
-      })
-      element.setAttribute("class", newClasses.join(" "))
+  // Extract and store string literals
+  const stringLiterals: string[] = [];
+  const extractedCode = code.replace(/('''[\s\S]*?'''|"""[\s\S]*?"""|'[^'\\]*(?:\\.[^'\\]*)*'|"[^"\\]*(?:\\.[^"\\]*)*")/g, 
+    (match) => {
+      const index = stringLiterals.length;
+      stringLiterals.push(match);
+      return `__STR${index}__`;
     }
-  })
+  );
 
-  // Replace ID names
-  root.querySelectorAll("[id]").forEach((element) => {
-    const id = element.getAttribute("id")
-    if (id) {
-      if (!idMap[id]) {
-        idMap[id] = `i${idCounter++}`
+  // Process the code
+  let obfuscated = extractedCode
+    .split('\n')
+    .map(line => {
+      // Skip comments and empty lines
+      if (line.trim().startsWith('#') || !line.trim()) return line;
+
+      // Handle imports
+      if (line.includes('import ') || line.startsWith('from ')) {
+        return options.importObfuscation 
+          ? line.replace(/(?:import|from)\s+(\w+)/g, (match, name) => {
+              if (!identifierMap.has(name)) {
+                identifierMap.set(name, generateIdentifier());
+              }
+              return match.replace(name, identifierMap.get(name) ?? name);
+            })
+          : line;
       }
-      element.setAttribute("id", idMap[id])
-    }
-  })
 
-  return root.toString()
+      // Handle function and class definitions
+      line = line.replace(/(?:def|class)\s+(\w+)/g, (match, name) => {
+        if (shouldPreserveIdentifier(name)) return match;
+        if (!identifierMap.has(name)) {
+          identifierMap.set(name, generateIdentifier());
+        }
+        return match.replace(name, identifierMap.get(name) ?? name);
+      });
+
+      // Handle variable assignments and references
+      for (const [original, obfuscated] of identifierMap) {
+        const regex = new RegExp(`\\b${original}\\b`, 'g');
+        line = line.replace(regex, obfuscated);
+      }
+
+      return line;
+    })
+    .join('\n');
+
+  // Add dead code if enabled
+  if (options.deadCodeInjection) {
+    const deadCode = [
+      '\nif False:',
+      '    def ' + generateIdentifier() + '(): pass',
+      '    class ' + generateIdentifier() + ': pass',
+      '    try: raise Exception',
+      '    except: pass',
+    ].join('\n');
+    obfuscated += deadCode;
+  }
+
+  // Restore string literals
+  stringLiterals.forEach((str, i) => {
+    obfuscated = obfuscated.replace(`__STR${i}__`, str);
+  });
+
+  return obfuscated;
+}
+
+// Enhanced HTML obfuscation
+function obfuscateHTML(code: string, options: ObfuscationOptions & { preserveEvents?: boolean }) {
+  const root = parseHTML(code);
+  const classMap = new Map<string, string>();
+  const idMap = new Map<string, string>();
+  let counter = 0;
+
+  // Generate random identifier
+  const generateIdentifier = (prefix: string) => {
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+    const suffix = Array(5).fill(null)
+      .map(() => alphabet[Math.floor(Math.random() * alphabet.length)])
+      .join('');
+    return prefix + counter++ + suffix;
+  };
+
+  // Process all elements
+  root.querySelectorAll('*').forEach(element => {
+    // Handle classes
+    const classString = element.getAttribute('class');
+    if (classString) {
+      const classes = classString.split(/\s+/);
+      const newClasses = classes.map(cls => {
+        if (!classMap.has(cls)) {
+          classMap.set(cls, generateIdentifier('c'));
+        }
+        return classMap.get(cls)!;
+      });
+      element.setAttribute('class', newClasses.join(' '));
+    }
+
+    // Handle IDs
+    const id = element.getAttribute('id');
+    if (id) {
+      if (!idMap.has(id)) {
+        idMap.set(id, generateIdentifier('i'));
+      }
+      element.setAttribute('id', idMap.get(id)!);
+    }
+
+    // Handle event attributes
+    if (!options.preserveEvents) {
+      // Get all attributes as an array of objects
+      const attributes = element.rawAttributes as Record<string, string>;
+      Object.entries(attributes)
+        .filter(([name]) => name.startsWith('on'))
+        .forEach(([name, value]) => {
+          try {
+            const obfuscated = obfuscateJS(value, options);
+            element.setAttribute(name, obfuscated);
+          } catch (e) {
+            console.warn('Failed to obfuscate event handler:', e);
+          }
+        });
+    }
+  });
+
+  // Handle inline scripts
+  root.querySelectorAll('script').forEach(script => {
+    if (!script.getAttribute('src')) {
+      try {
+        const obfuscated = obfuscateJS(script.textContent || '', options);
+        script.textContent = obfuscated;
+      } catch (e) {
+        console.warn('Failed to obfuscate inline script:', e);
+      }
+    }
+  });
+
+  // Handle inline styles
+  root.querySelectorAll('style').forEach(style => {
+    try {
+      const obfuscated = obfuscateCSS(style.textContent || '');
+      style.textContent = obfuscated;
+    } catch (e) {
+      console.warn('Failed to obfuscate inline style:', e);
+    }
+  });
+
+  // Minify if requested
+  let result = root.toString();
+  if (options.minify) {
+    result = result
+      .replace(/>\s+</g, '><') // Remove whitespace between tags
+      .replace(/<!--[\s\S]*?-->/g, '') // Remove comments
+      .replace(/\s{2,}/g, ' ') // Collapse multiple spaces
+      .trim();
+  }
+
+  return result;
 }
 
 // CSS obfuscation

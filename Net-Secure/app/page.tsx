@@ -34,10 +34,10 @@ import {
   Wifi,
   Code,
   ShieldAlert,
-  ShieldCheck,
-  Scan,
   ChevronLeft,
   ChevronRight,
+  ShieldCheck,
+  Scan
 } from "lucide-react"
 
 // UI component imports
@@ -598,24 +598,30 @@ const SecureApp = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full hover:bg-primary/10 transition-colors relative"
+            className="rounded-full bg-background/95 backdrop-blur-sm hover:bg-primary/10 hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
             <motion.div
               className="flex items-center justify-center"
               variants={{
-                open: { rotate: 0 },
-                closed: { rotate: 180 }
+                open: { rotate: 0, scale: 1 },
+                closed: { rotate: 180, scale: 1 }
               }}
-              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+              transition={{ 
+                duration: 0.3, 
+                ease: [0.23, 1, 0.32, 1],
+                scale: { duration: 0.15 }
+              }}
             >
               <ChevronLeft className="h-5 w-5 text-foreground/80" />
             </motion.div>
             <motion.div
               className="absolute inset-0 rounded-full bg-primary/5"
-              initial={{ scale: 0, opacity: 0 }}
-              whileHover={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.2 }}
+              variants={{
+                open: { scale: 1, opacity: 0 },
+                closed: { scale: 1.2, opacity: 0.1 }
+              }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
             />
           </Button>
         </motion.div>

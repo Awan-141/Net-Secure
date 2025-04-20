@@ -8,25 +8,25 @@ import { SidebarProvider } from "@/components/ui/sidebar"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "SecureShield - Professional Security Tools",
+  title: "Net-Secure",
   description: "Professional-grade security and privacy tools with zero data transmission",
   keywords: "security, privacy, encryption, password, analysis, visualization, entropy, homoglyph, binary",
-  authors: [{ name: "SecureShield Team" }],
-  creator: "SecureShield",
-  publisher: "SecureShield",
+  authors: [{ name: "Net-Secure Team" }],
+  creator: "Net-Secure",
+  publisher: "Net-Secure",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://secureshield.com",
-    title: "SecureShield - Professional Security Tools",
+    url: "https://net-secure.netlify.app/",
+    title: "Net-Secure - Professional Security Tools",
     description: "Professional-grade security and privacy tools with zero data transmission",
-    siteName: "SecureShield",
+    siteName: "Net-Secure",
   },
   twitter: {
     card: "summary_large_image",
-    title: "SecureShield - Professional Security Tools",
+    title: "Net-Secure - Professional Security Tools",
     description: "Professional-grade security and privacy tools with zero data transmission",
-    creator: "@secureshield",
+    creator: "@AFP",
   },
 }
 

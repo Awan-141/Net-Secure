@@ -4,98 +4,136 @@ import * as React from "react"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 
-interface AnimatedProgressProps {
+interface AnimatedProgressProps extends React.HTMLAttributes<HTMLDivElement> {
   value: number
-  max?: number
-  className?: string
-  indicatorClassName?: string
-  showValue?: boolean
-  variant?: "default" | "success" | "warning" | "error"
+  variant?: "default" | "success" | "warning" | "danger"
   size?: "sm" | "md" | "lg"
-  animate?: boolean
+  showValue?: boolean
+  delay?: number
+  indeterminate?: boolean
 }
 
 export function AnimatedProgress({
   value,
-  max = 100,
-  className,
-  indicatorClassName,
-  showValue = false,
   variant = "default",
   size = "md",
-  animate = true,
+  showValue = false,
+  delay = 0,
+  indeterminate = false,
+  className,
+  ...props
 }: AnimatedProgressProps) {
-  const percentage = Math.min(Math.max((value / max) * 100, 0), 100)
-
-  const variants = {
-    default: "bg-primary",
-    success: "bg-green-500",
-    warning: "bg-yellow-500",
-    error: "bg-red-500"
+  const getVariantClasses = () => {
+    switch (variant) {
+      case "success":
+        return "bg-success"
+      case "warning":
+        return "bg-warning"
+      case "danger":
+        return "bg-destructive"
+      default:
+        return "bg-primary"
+    }
   }
 
-  const sizes = {
-    sm: "h-2",
-    md: "h-3",
-    lg: "h-4"
-  }
-
-  const shimmer = {
-    hidden: { x: "-100%" },
-    visible: { 
-      x: "100%",
-      transition: {
-        repeat: Infinity,
-        duration: 1.5,
-        ease: "linear"
-      }
+  const getSizeClasses = () => {
+    switch (size) {
+      case "sm":
+        return "h-1"
+      case "lg":
+        return "h-4"
+      default:
+        return "h-2"
     }
   }
 
   return (
-    <div className="relative">
-      <div
-        className={cn(
-          "relative w-full overflow-hidden rounded-full bg-primary/10",
-          sizes[size],
-          className
-        )}
-      >
+    <div
+      className={cn(
+        "relative w-full overflow-hidden rounded-full bg-secondary",
+        getSizeClasses(),
+        className
+      )}
+      {...props}
+    >
+      {indeterminate ? (
+        <motion.div
+          className={cn("absolute inset-y-0 rounded-full", getVariantClasses())}
+          initial={{ x: "-100%" }}
+          animate={{ x: "100%" }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay,
+          }}
+          style={{ width: "50%" }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        </motion.div>
+      ) : (
+        <motion.div
+          className={cn("h-full rounded-full", getVariantClasses())}
+          initial={{ width: 0 }}
+          animate={{ width: `${value}%` }}
+          transition={{ duration: 0.5, ease: "easeOut", delay }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+          {showValue && size !== "sm" && (
+            <motion.span
+              className={cn(
+                "absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium",
+                variant === "default" ? "text-primary-foreground" : "text-white"
+              )}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: delay + 0.2 }}
+            >
+              {Math.round(value)}%
+            </motion.span>
+          )}
+        </motion.div>
+      )}
+      
+      {/* Pulse effect for emphasis */}
+      {!indeterminate && value > 0 && (
         <motion.div
           className={cn(
-            "h-full w-full flex items-center rounded-full",
-            variants[variant],
-            indicatorClassName
+            "absolute right-0 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full",
+            getVariantClasses()
           )}
-          style={{
-            transformOrigin: "0%",
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{
+            scale: [1, 1.5, 1],
+            opacity: [0.5, 0, 0],
           }}
-          initial={animate ? { width: 0 } : { width: `${percentage}%` }}
-          animate={{ width: `${percentage}%` }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-        >
-          <div className="relative w-full h-full overflow-hidden">
+          transition={{
+            duration: 1,
+            repeat: Infinity,
+            delay,
+          }}
+        />
+      )}
+      
+      {/* Loading dots for indeterminate state */}
+      {indeterminate && (
+        <div className="absolute inset-0 flex items-center justify-center gap-1">
+          {[0, 1, 2].map((i) => (
             <motion.div
-              className="absolute inset-0 w-full h-full"
-              style={{
-                background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
+              key={i}
+              className={cn("h-1 w-1 rounded-full", getVariantClasses())}
+              animate={{
+                scale: [0.5, 1, 0.5],
+                opacity: [0.3, 1, 0.3],
               }}
-              variants={shimmer}
-              initial="hidden"
-              animate="visible"
+              transition={{
+                duration: 1,
+                repeat: Infinity,
+                delay: i * 0.2,
+              }}
             />
-          </div>
-        </motion.div>
-      </div>
-      {showValue && (
-        <motion.span
-          className="absolute right-0 -top-6 text-sm text-muted-foreground"
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          {Math.round(percentage)}%
-        </motion.span>
+          ))}
+        </div>
       )}
     </div>
   )

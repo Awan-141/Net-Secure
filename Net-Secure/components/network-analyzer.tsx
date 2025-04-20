@@ -15,9 +15,10 @@ import {
   ArrowUpDown,
   Clock,
   AlertCircle,
+  Network,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -32,6 +33,7 @@ import {
 } from "@/components/ui/dialog"
 import { FileTransferEstimator } from "@/components/file-transfer-estimator"
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts"
+import { motion, AnimatePresence } from "framer-motion"
 
 type Result = {
   [key: string]: string | number
@@ -42,6 +44,13 @@ type HistoryEntry = {
   ping: number
   download: number
   upload: number
+}
+
+type NetworkData = {
+  timestamp: string
+  latency: number
+  bandwidth: number
+  packetsLost: number
 }
 
 // Cross-origin safe API handler that works in any environment
@@ -74,6 +83,11 @@ export function NetworkAnalyzer() {
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [activeTab, setActiveTab] = useState<string>("overview")
   const [error, setError] = useState<string | null>(null)
+  const [networkData, setNetworkData] = useState<NetworkData[]>([])
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [activeMetric, setActiveMetric] = useState<"latency" | "bandwidth" | "packets">("latency")
+  const [analysisComplete, setAnalysisComplete] = useState(false)
+  const [networkScore, setNetworkScore] = useState(0)
 
   // Fixed useRef declaration
   const chartRef = useRef<HTMLCanvasElement>(null)
@@ -269,8 +283,284 @@ export function NetworkAnalyzer() {
     return null
   }
 
+  const startAnalysis = async () => {
+    setIsAnalyzing(true)
+    setAnalysisComplete(false)
+    
+    // Simulated network analysis
+    const metrics: NetworkData[] = []
+    for (let i = 0; i < 10; i++) {
+      await new Promise(resolve => setTimeout(resolve, 500))
+      metrics.push({
+        timestamp: new Date().toISOString(),
+        latency: Math.random() * 100,
+        bandwidth: Math.random() * 100,
+        packetsLost: Math.random() * 5,
+      })
+      setNetworkData([...metrics])
+    }
+
+    // Calculate network score based on metrics
+    const avgLatency = metrics.reduce((sum, m) => sum + m.latency, 0) / metrics.length
+    const avgBandwidth = metrics.reduce((sum, m) => sum + m.bandwidth, 0) / metrics.length
+    const avgPacketLoss = metrics.reduce((sum, m) => sum + m.packetsLost, 0) / metrics.length
+    
+    const score = Math.round(
+      (100 - avgLatency / 2) * 0.4 +
+      (avgBandwidth) * 0.4 +
+      (100 - avgPacketLoss * 20) * 0.2
+    )
+    
+    setNetworkScore(Math.max(0, Math.min(100, score)))
+    setIsAnalyzing(false)
+    setAnalysisComplete(true)
+  }
+
   return (
     <div className="space-y-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-lg border bg-card p-6"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+        <div className="relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h2 className="text-2xl font-bold">Network Analysis</h2>
+            <p className="text-muted-foreground">
+              Analyze your network performance and identify potential issues
+            </p>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+          className="space-y-4"
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Network Metrics</CardTitle>
+              <CardDescription>Real-time network performance data</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isAnalyzing ? (
+                <div className="space-y-4">
+                  <div className="h-[300px] w-full flex items-center justify-center">
+                    <motion.div 
+                      className="relative"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    >
+                      <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
+                      <div className="absolute inset-0 rounded-full border-t-2 border-primary" />
+                      <Network className="h-8 w-8 text-primary animate-pulse" />
+                    </motion.div>
+                    <p className="text-sm text-muted-foreground mt-4">Analyzing network performance...</p>
+                  </div>
+                  <Progress value={networkData.length * 10} className="w-full" />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    {(['latency', 'bandwidth', 'packets'] as const).map((metric) => (
+                      <Button
+                        key={metric}
+                        variant={activeMetric === metric ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setActiveMetric(metric)}
+                        className="flex-1"
+                      >
+                        {metric.charAt(0).toUpperCase() + metric.slice(1)}
+                      </Button>
+                    ))}
+                  </div>
+                  
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={networkData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="timestamp" 
+                          tickFormatter={(value) => new Date(value).toLocaleTimeString()}
+                        />
+                        <YAxis />
+                        <Tooltip 
+                          formatter={(value: number) => [
+                            `${value.toFixed(2)} ${
+                              activeMetric === 'latency' ? 'ms' :
+                              activeMetric === 'bandwidth' ? 'Mbps' : '%'
+                            }`,
+                            activeMetric.charAt(0).toUpperCase() + activeMetric.slice(1)
+                          ]}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey={
+                            activeMetric === 'latency' ? 'latency' :
+                            activeMetric === 'bandwidth' ? 'bandwidth' : 'packetsLost'
+                          }
+                          stroke="hsl(var(--primary))"
+                          strokeWidth={2}
+                          dot={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter>
+              <Button 
+                onClick={startAnalysis} 
+                disabled={isAnalyzing}
+                className="w-full"
+              >
+                {isAnalyzing ? (
+                  <span className="flex items-center gap-2">
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </motion.span>
+                    Analyzing...
+                  </span>
+                ) : (
+                  "Start Analysis"
+                )}
+              </Button>
+            </CardFooter>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+          className="space-y-4"
+        >
+          <AnimatePresence>
+            {analysisComplete && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Network Score</CardTitle>
+                    <CardDescription>Overall network performance rating</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="flex justify-center">
+                      <motion.div
+                        className="relative w-48 h-48"
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.2, type: "spring" }}
+                      >
+                        <svg viewBox="0 0 100 100" className="transform -rotate-90">
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="45"
+                            fill="none"
+                            stroke="hsl(var(--primary) / 0.1)"
+                            strokeWidth="10"
+                          />
+                          <motion.circle
+                            cx="50"
+                            cy="50"
+                            r="45"
+                            fill="none"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth="10"
+                            strokeDasharray={`${networkScore * 2.83} ${283 - networkScore * 2.83}`}
+                            initial={{ strokeDasharray: "0 283" }}
+                            animate={{ strokeDasharray: `${networkScore * 2.83} ${283 - networkScore * 2.83}` }}
+                            transition={{ duration: 1, ease: "easeOut" }}
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <motion.span
+                            className="text-4xl font-bold"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 1 }}
+                          >
+                            {networkScore}
+                          </motion.span>
+                        </div>
+                      </motion.div>
+                    </div>
+
+                    <motion.div
+                      className="mt-6 space-y-2"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 1.2 }}
+                    >
+                      <h4 className="font-medium">Analysis Summary</h4>
+                      <div className="space-y-1 text-sm">
+                        <p className="flex justify-between">
+                          <span>Average Latency:</span>
+                          <span>{networkData.reduce((sum, d) => sum + d.latency, 0) / networkData.length}ms</span>
+                        </p>
+                        <p className="flex justify-between">
+                          <span>Average Bandwidth:</span>
+                          <span>{networkData.reduce((sum, d) => sum + d.bandwidth, 0) / networkData.length}Mbps</span>
+                        </p>
+                        <p className="flex justify-between">
+                          <span>Packet Loss:</span>
+                          <span>{networkData.reduce((sum, d) => sum + d.packetsLost, 0) / networkData.length}%</span>
+                        </p>
+                      </div>
+                    </motion.div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Network Tips</CardTitle>
+              <CardDescription>Recommendations for better performance</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {[
+                  "Use a wired connection for better stability",
+                  "Keep network equipment updated",
+                  "Minimize interference from other devices",
+                  "Consider upgrading your network plan",
+                  "Use QoS settings for priority traffic"
+                ].map((tip, index) => (
+                  <motion.li 
+                    key={index}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 + index * 0.1 }}
+                    className="flex items-start gap-2"
+                  >
+                    <Network className="h-4 w-4 text-primary mt-1" />
+                    <span className="text-sm">{tip}</span>
+                  </motion.li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
           <Wifi className="h-5 w-5 text-primary" />

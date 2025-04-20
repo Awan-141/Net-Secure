@@ -93,9 +93,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p className="text-center text-gray-500 text-xs mt-4">
-          © {new Date().getFullYear()} NetSecure. All rights reserved.
-        </p>
+        
       </div>
     </div>
   )

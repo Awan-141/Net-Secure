@@ -58,8 +58,19 @@ const config = {
           foreground: "hsl(var(--success-foreground))",
         },
         warning: {
-          DEFAULT: "hsl(var(--warning))",
-          foreground: "hsl(var(--warning-foreground))",
+          DEFAULT: "#F59E0B",
+          foreground: "#FEF3C7",
+          "50": "#FFFBEB",
+          "100": "#FEF3C7",
+          "200": "#FDE68A",
+          "300": "#FCD34D",
+          "400": "#FBBF24",
+          "500": "#F59E0B",
+          "600": "#D97706",
+          "700": "#B45309",
+          "800": "#92400E",
+          "900": "#78350F",
+          "950": "#451A03",
         },
       },
       borderRadius: {
@@ -81,6 +92,22 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "toast-hide": {
+          "0%": { opacity: "1" },
+          "100%": { opacity: "0" },
+        },
+        "toast-slide-in-right": {
+          "0%": { transform: "translateX(calc(100% + 1rem))" },
+          "100%": { transform: "translateX(0)" },
+        },
+        "toast-slide-in-bottom": {
+          "0%": { transform: "translateY(calc(100% + 1rem))" },
+          "100%": { transform: "translateY(0)" },
+        },
+        "toast-swipe-out": {
+          "0%": { transform: "translateX(var(--radix-toast-swipe-end-x))" },
+          "100%": { transform: "translateX(calc(100% + 1rem))" },
+        },
         "fade-in": {
           from: { opacity: "0" },
           to: { opacity: "1" },
@@ -101,6 +128,10 @@ const config = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "toast-hide": "toast-hide 100ms ease-in forwards",
+        "toast-slide-in-right": "toast-slide-in-right 150ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "toast-slide-in-bottom": "toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "toast-swipe-out": "toast-swipe-out 100ms ease-out forwards",
         "fade-in": "fade-in 0.2s ease-out",
         "fade-out": "fade-out 0.2s ease-out",
         "slide-in": "slide-in 0.2s ease-out",
@@ -108,7 +139,7 @@ const config = {
       },
     },
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
 } satisfies Config
 
 export default config

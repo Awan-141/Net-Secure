@@ -2,20 +2,24 @@
 
 // Inspired by react-hot-toast library
 import * as React from "react"
+import { cn } from "@/lib/utils"
 
 import type {
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 5
+const TOAST_REMOVE_DELAY = 3000
+
+type ToastType = "default" | "destructive" | "warning"
 
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  variant?: ToastType
 }
 
 const actionTypes = {
@@ -150,6 +154,7 @@ function toast({ ...props }: Toast) {
       type: "UPDATE_TOAST",
       toast: { ...props, id },
     })
+  
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
 
   dispatch({
@@ -158,6 +163,12 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
+      className: cn(
+        "data-[state=open]:animate-toast-slide-in-right data-[state=closed]:animate-toast-hide",
+        "data-[swipe=end]:animate-toast-swipe-out",
+        "data-[state=open]:sm:animate-toast-slide-in-bottom",
+        props.className
+      ),
       onOpenChange: (open) => {
         if (!open) dismiss()
       },
@@ -165,7 +176,7 @@ function toast({ ...props }: Toast) {
   })
 
   return {
-    id: id,
+    id,
     dismiss,
     update,
   }

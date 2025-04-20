@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -21,7 +21,9 @@ import {
   Code,
   Menu,
   X,
-  ChevronLeft
+  ChevronLeft,
+  Volume2,
+  VolumeX
 } from "lucide-react"
 import { 
   Sidebar,
@@ -30,6 +32,7 @@ import {
   SidebarFooter,
   useSidebar
 } from "@/components/ui/sidebar"
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 
 interface AppSidebarProps {
   activeTab: string
@@ -44,6 +47,21 @@ export function AppSidebar({ activeTab, setActiveTab, username, onLogout, isOpen
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const { setOpen, setOpenMobile } = useSidebar()
   const pathname = usePathname()
+  const [soundEnabled, setSoundEnabled] = useState(false)
+  const humAudioRef = useRef<HTMLAudioElement>(null)
+
+  const playHumSound = () => {
+    if (soundEnabled && humAudioRef.current) {
+      humAudioRef.current.currentTime = 0
+      humAudioRef.current.play()
+    }
+  }
+
+  const stopHumSound = () => {
+    if (humAudioRef.current) {
+      humAudioRef.current.pause()
+    }
+  }
 
   // Sync sidebar state with props
   useEffect(() => {
@@ -119,80 +137,94 @@ export function AppSidebar({ activeTab, setActiveTab, username, onLogout, isOpen
     }
   ]
 
-  const SidebarContents = () => (
+  return (
     <>
-      <SidebarHeader>
-        <div className="flex h-16 items-center border-b px-6">
-          <Link href="/" className="flex items-center gap-2 font-semibold flex-1 hover:opacity-80 transition-opacity">
-            <Shield className="h-6 w-6 text-primary animate-pulse-shadow" />
-            <motion.span 
-              className="text-lg font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              SecureShield
-            </motion.span>
-          </Link>
-          {onClose && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full hover:bg-primary/10 transition-colors"
-              onClick={onClose}
-            >
-              <ChevronLeft className="h-5 w-5" />
-              <span className="sr-only">Close sidebar</span>
-            </Button>
-          )}
-        </div>
+      {/* Desktop Sidebar */}
+      <Sidebar 
+        className="border-r bg-sidebar-background"
+        onMouseEnter={playHumSound}
+        onMouseLeave={stopHumSound}
+      >
+        <audio 
+          ref={humAudioRef} 
+          src="/sounds/lightsaber-hum.mp3" 
+          loop 
+          preload="auto"
+        />
 
-        <div className="border-b p-4">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
-              <span className="text-sm font-medium text-primary">
-                {username?.charAt(0)?.toUpperCase() || "U"}
-              </span>
-            </div>
-            <div className="space-y-0.5 flex-1">
-              <p className="text-sm font-medium">{username || "User"}</p>
-              <p className="text-xs text-muted-foreground">Pro Account</p>
-            </div>
-            <ThemeToggle />
-          </div>
-        </div>
-      </SidebarHeader>
+        {/* Lightsaber effect */}
+        <div className="sidebar-lightsaber" />
 
-      <SidebarContent>
-        <ScrollArea className="flex-1 px-4 py-6 custom-scrollbar">
-          <div className="space-y-8">
-            {navigationItems.map((section, sectionIndex) => (
+        <SidebarHeader>
+          <div className="flex h-16 items-center border-b border-border/10 px-6">
+            <Link href="/" className="flex items-center gap-2 font-semibold flex-1">
               <motion.div 
-                key={section.section} 
-                className="space-y-2"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + sectionIndex * 0.1 }}
+                className="relative"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <h3 className="text-xs font-medium text-muted-foreground tracking-wider uppercase mx-2">
-                  {section.section}
-                </h3>
-                {section.items.map((item, itemIndex) => (
-                  <motion.div
-                    key={item.tab}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 + sectionIndex * 0.1 + itemIndex * 0.05 }}
-                  >
+                <Shield className="h-6 w-6 text-primary" />
+                <motion.div
+                  className="absolute inset-0 rounded-full bg-primary/10"
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.2, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+              </motion.div>
+              <motion.span 
+                className="text-lg font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                NetSecure
+              </motion.span>
+            </Link>
+          </div>
+
+          <div className="border-b border-border/10 p-4">
+            <div className="flex items-center gap-3">
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center relative group"
+              >
+                <span className="text-sm font-medium text-primary">
+                  {username?.charAt(0)?.toUpperCase() || "U"}
+                </span>
+                <motion.div
+                  className="absolute inset-0 rounded-full bg-primary/5"
+                  initial={false}
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.2, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+              </motion.div>
+              <div className="space-y-0.5 flex-1">
+                <p className="text-sm font-medium">{username || "User"}</p>
+                
+              </div>
+              <ThemeToggle />
+            </div>
+          </div>
+        </SidebarHeader>
+
+        <SidebarContent>
+          <ScrollArea className="flex-1 px-4 py-6">
+            <nav className="space-y-6">
+              {navigationItems.map((section, sectionIndex) => (
+                <div key={section.section} className="space-y-2">
+                  <h3 className="text-xs font-medium text-muted-foreground tracking-wider uppercase px-2">
+                    {section.section}
+                  </h3>
+                  {section.items.map((item, itemIndex) => (
                     <Button
+                      key={item.tab}
                       variant="ghost"
                       className={cn(
                         "w-full justify-start rounded-lg text-sm font-medium transition-all duration-200",
-                        "hover:bg-primary/10 hover:text-primary hover:translate-x-1",
-                        "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-                        activeTab === item.tab
-                          ? "bg-primary/10 text-primary hover:bg-primary/15"
-                          : "text-foreground hover:bg-muted"
+                        "hover:bg-primary/10 hover:text-primary",
+                        "relative overflow-hidden",
+                        activeTab === item.tab && "bg-primary/10 text-primary"
                       )}
                       onClick={() => {
                         setActiveTab(item.tab)
@@ -209,52 +241,48 @@ export function AppSidebar({ activeTab, setActiveTab, username, onLogout, isOpen
                         />
                       )}
                     </Button>
-                  </motion.div>
-                ))}
-              </motion.div>
-            ))}
+                  ))}
+                </div>
+              ))}
+            </nav>
+          </ScrollArea>
+        </SidebarContent>
+
+        <SidebarFooter>
+          
+          <div className="p-4">
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-primary/10 group relative overflow-hidden"
+              onClick={() => {
+                onLogout()
+                setIsMobileOpen(false)
+              }}
+            >
+              <LogOut className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+              Logout
+              <motion.div
+                className="absolute inset-0 bg-primary/5 rounded-lg"
+                initial={{ opacity: 0, scale: 0 }}
+                whileHover={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2 }}
+              />
+            </Button>
           </div>
-        </ScrollArea>
-      </SidebarContent>
+        </SidebarFooter>
+      </Sidebar>
 
-      <SidebarFooter>
-        <div className="p-4">
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-sm font-medium text-muted-foreground hover:text-foreground group relative overflow-hidden"
-            onClick={() => {
-              onLogout()
-              setIsMobileOpen(false)
-            }}
-          >
-            <LogOut className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-            Logout
-            <ChevronRight className="ml-auto h-4 w-4 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-1" />
-            <motion.div
-              className="absolute inset-0 bg-primary/5 rounded-lg"
-              initial={{ scale: 0, opacity: 0 }}
-              whileHover={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.2 }}
-            />
-          </Button>
-        </div>
-      </SidebarFooter>
-    </>
-  )
-
-  return (
-    <>
-      {/* Mobile Toggle Button */}
-      <motion.div
+      {/* Mobile Menu Button */}
+      <motion.div 
+        className="lg:hidden fixed top-4 left-4 z-50"
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.1 }}
-        className="lg:hidden"
       >
         <Button
           variant="ghost"
           size="icon"
-          className="fixed top-4 left-4 z-50 rounded-full hover:bg-primary/10"
+          className="rounded-full hover:bg-primary/10"
           onClick={() => setIsMobileOpen(!isMobileOpen)}
         >
           <AnimatePresence mode="wait">
@@ -296,10 +324,6 @@ export function AppSidebar({ activeTab, setActiveTab, username, onLogout, isOpen
           />
         )}
       </AnimatePresence>
-
-      <Sidebar>
-        <SidebarContents />
-      </Sidebar>
     </>
   )
 }

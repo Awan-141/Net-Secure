@@ -11,7 +11,7 @@ import { AnimatedTabs } from "@/components/ui/animated-tabs"
 import { AnimatedCard } from "@/components/ui/animated-card"
 import { AnimatedProgress } from "@/components/ui/animated-progress"
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
-import { File, Image, Video, FileText, Archive, Wifi, Network, ArrowRight, Upload, Download, Clock, Cloud, Shield, Zap, BarChart2, Settings } from 'lucide-react'
+import { File, Image, Video, FileText, Archive, Wifi, Network, ArrowRight, Upload, Download, Clock, Cloud, Shield, Zap, BarChart2, Settings, RefreshCw } from 'lucide-react'
 
 type FileUnit = "bytes" | "KB" | "MB" | "GB" | "TB"
 
@@ -66,6 +66,7 @@ export function FileTransferEstimator() {
   const [activeTab, setActiveTab] = useState<string>("basic")
   const [isCalculating, setIsCalculating] = useState<boolean>(false)
   const [showResults, setShowResults] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   const simulateBandwidthMonitoring = useCallback(() => {
     const baseBandwidth = (downloadSpeed + uploadSpeed) / 2
@@ -139,7 +140,7 @@ export function FileTransferEstimator() {
   }
 
   const handleEstimate = () => {
-    setIsCalculating(true)
+    setIsLoading(true)
     setShowResults(false)
     
     setTimeout(() => {
@@ -176,9 +177,9 @@ export function FileTransferEstimator() {
       setDownloadTime(downloadTimeValue)
       setUploadTime(uploadTimeValue)
       setCloudUploadTime(cloudUploadTimeValue)
-      setIsCalculating(false)
+      setIsLoading(false)
       setShowResults(true)
-    }, 1500)
+    }, 800)
   }
 
   const getFileIcon = (fileType: string) => {
@@ -467,7 +468,7 @@ export function FileTransferEstimator() {
             </CardContent>
           </AnimatedCard>
 
-          <AnimatedCard delay={2} children={undefined} title={""}>
+          <AnimatedCard delay={2} title={""}>
             <CardHeader>
               <CardTitle>Connection Settings</CardTitle>
               <CardDescription>Configure your network parameters</CardDescription>
@@ -475,7 +476,8 @@ export function FileTransferEstimator() {
             <CardContent className="space-y-6">
               <AnimatedTabs defaultTab="basic" onChange={setActiveTab} variant="pills">
                 {tabsContent.map((tab) => (
-                  <div key={tab.id} id={tab.id} label={tab.label}>
+                  <div key={tab.id} id={tab.id}>
+                    <div className="tab-label">{tab.label}</div>
                     {tab.content}
                   </div>
                 ))}

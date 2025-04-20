@@ -22,7 +22,6 @@ const nextConfig = {
     parallelServerCompiles: true,
   },
   output: 'standalone',
-  swcMinify: true,
   // Ensure proper optimization for different architectures
   webpack: (config, { isServer }) => {
     config.optimization = {

@@ -1,0 +1,6 @@
+// ...existing exports...
+
+// Update toast types to include warning variant
+export type ToastVariant = "default" | "destructive" | "warning";
+
+// ...existing exports...

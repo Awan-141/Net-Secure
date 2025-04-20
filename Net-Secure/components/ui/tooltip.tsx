@@ -19,13 +19,31 @@ const TooltipContent = React.forwardRef<
     ref={ref}
     sideOffset={sideOffset}
     className={cn(
-      "z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-xs text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-      className,
+      "z-50 overflow-hidden rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-950 shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50",
+      className
     )}
     {...props}
   />
 ))
 TooltipContent.displayName = TooltipPrimitive.Content.displayName
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+interface KeyboardShortcutProps {
+  combo: string[]
+  className?: string
+}
+
+const KeyboardShortcut = ({ combo, className }: KeyboardShortcutProps) => (
+  <div className={cn("flex items-center gap-1 text-xs text-muted-foreground", className)}>
+    {combo.map((key, i) => (
+      <React.Fragment key={key}>
+        <kbd className="rounded border border-slate-200 bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] font-medium dark:border-slate-800 dark:bg-slate-900">
+          {key}
+        </kbd>
+        {i < combo.length - 1 && <span>+</span>}
+      </React.Fragment>
+    ))}
+  </div>
+)
+
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, KeyboardShortcut }
 

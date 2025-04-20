@@ -1,95 +1,131 @@
 "use client"
 
 import * as React from "react"
-import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-motion"
+import { motion } from "framer-motion"
+import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
-interface AnimatedCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface AnimatedCardProps extends React.ComponentProps<typeof Card> {
+  delay?: number
+  title?: string
+  hoverEffect?: "lift" | "glow" | "border" | "none"
+  animate?: boolean
   children: React.ReactNode
-  className?: string
-  gradient?: boolean
-  hover?: boolean
-  animation?: "tilt" | "lift" | "glow" | "none"
 }
 
-export function AnimatedCard({ 
-  children, 
-  className, 
-  gradient = false,
-  hover = true,
-  animation = "tilt",
-  ...props 
+export function AnimatedCard({
+  delay = 0,
+  title,
+  hoverEffect = "lift",
+  animate = true,
+  className,
+  children,
+  ...props
 }: AnimatedCardProps) {
-  const mouseX = useMotionValue(0)
-  const mouseY = useMotionValue(0)
+  const [isHovered, setIsHovered] = React.useState(false)
 
-  const rotateX = useSpring(0, { stiffness: 300, damping: 30 })
-  const rotateY = useSpring(0, { stiffness: 300, damping: 30 })
-  const scale = useSpring(1, { stiffness: 300, damping: 30 })
-
-  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent) {
-    const { left, top, width, height } = currentTarget.getBoundingClientRect()
-    const x = clientX - left
-    const y = clientY - top
-    
-    mouseX.set(x)
-    mouseY.set(y)
-
-    if (animation === "tilt") {
-      const rotateXValue = ((y - height / 2) / height) * -10
-      const rotateYValue = ((x - width / 2) / width) * 10
-      rotateX.set(rotateXValue)
-      rotateY.set(rotateYValue)
+  const hoverStyles = {
+    lift: {
+      initial: { y: 0, boxShadow: "0 0 0 rgba(0, 0, 0, 0)" },
+      hover: { 
+        y: -4,
+        boxShadow: "0 10px 30px -10px hsl(var(--primary) / 0.2)",
+        borderColor: "hsl(var(--primary) / 0.5)"
+      }
+    },
+    glow: {
+      initial: { 
+        boxShadow: "0 0 0 rgba(0, 0, 0, 0)",
+        background: "hsl(var(--card))"
+      },
+      hover: {
+        boxShadow: [
+          "0 0 20px -5px hsl(var(--primary) / 0.2)",
+          "0 0 30px -10px hsl(var(--primary) / 0.3)",
+          "0 0 40px -15px hsl(var(--primary) / 0.1)"
+        ],
+        background: "linear-gradient(130deg, hsl(var(--card)), hsl(var(--card)) 60%, hsl(var(--primary) / 0.1))"
+      }
+    },
+    border: {
+      initial: { 
+        boxShadow: "0 0 0 1px hsl(var(--border))",
+        background: "hsl(var(--card))"
+      },
+      hover: {
+        boxShadow: "0 0 0 2px hsl(var(--primary) / 0.5)",
+        background: "linear-gradient(130deg, hsl(var(--card)), hsl(var(--card)) 60%, hsl(var(--primary) / 0.05))"
+      }
+    },
+    none: {
+      initial: {},
+      hover: {}
     }
   }
-
-  function onMouseEnter() {
-    if (animation === "lift") {
-      scale.set(1.02)
-    }
-  }
-
-  function onMouseLeave() {
-    mouseX.set(0)
-    mouseY.set(0)
-    rotateX.set(0)
-    rotateY.set(0)
-    scale.set(1)
-  }
-
-  const background = useMotionTemplate`
-    radial-gradient(
-      650px circle at ${mouseX}px ${mouseY}px,
-      var(--gradient-color, hsl(var(--primary) / 0.15)),
-      transparent 80%
-    )
-  `
 
   return (
     <motion.div
-      className={cn(
-        "rounded-xl border bg-card p-6 transition-colors relative overflow-hidden",
-        hover && "hover:border-primary/50",
-        className
-      )}
-      style={{
-        scale,
-        rotateX,
-        rotateY,
-        transformStyle: "preserve-3d",
+      initial={{ opacity: 0, y: 20 }}
+      animate={animate ? { opacity: 1, y: 0 } : {}}
+      transition={{
+        duration: 0.3,
+        delay,
+        ease: "easeOut"
       }}
-      onMouseMove={hover ? onMouseMove : undefined}
-      onMouseEnter={hover ? onMouseEnter : undefined}
-      onMouseLeave={hover ? onMouseLeave : undefined}
-      {...props}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      className="relative"
     >
-      {gradient && (
+      <motion.div
+        className={cn(
+          "relative rounded-lg border bg-card overflow-hidden",
+          className
+        )}
+        initial={hoverStyles[hoverEffect].initial}
+        animate={isHovered ? hoverStyles[hoverEffect].hover : hoverStyles[hoverEffect].initial}
+        transition={{
+          duration: 0.2,
+          ease: "easeInOut"
+        }}
+        {...(props as React.ComponentPropsWithoutRef<typeof motion.div>)}
+      >
+        {/* Background gradient effect */}
         <motion.div
-          className="pointer-events-none absolute -inset-px opacity-0 transition duration-300 group-hover:opacity-100"
-          style={{ background }}
+          className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isHovered ? 0.5 : 0 }}
+          transition={{ duration: 0.2 }}
         />
-      )}
-      {children}
+
+        {/* Shine effect */}
+        {hoverEffect !== "none" && (
+          <motion.div
+            className="absolute inset-0 opacity-0"
+            initial={{ opacity: 0 }}
+            animate={isHovered ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent -skew-x-12 translate-x-[-100%] animate-[shine_2s_ease-in-out_infinite]" />
+          </motion.div>
+        )}
+
+        {/* Card content with subtle lift effect */}
+        <motion.div
+          className="relative"
+          animate={isHovered ? { y: -2 } : { y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {children}
+        </motion.div>
+      </motion.div>
+
+      {/* Bottom reflection/shadow effect */}
+      <motion.div
+        className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-b from-primary/5 to-transparent opacity-0 blur-xl"
+        initial={{ opacity: 0, y: 0 }}
+        animate={isHovered ? { opacity: 0.5, y: 4 } : { opacity: 0, y: 0 }}
+        transition={{ duration: 0.2 }}
+      />
     </motion.div>
   )
 }
